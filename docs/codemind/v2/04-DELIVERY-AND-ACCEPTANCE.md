@@ -7,7 +7,7 @@
 ## 1. Governance / working protocol
 
 1. Read CODEMIND fork's project instructions, check HEAD + dirty status, preserve original upstream notices and current running service identity.
-2. The owner starts from S0 evidence and works the *first incomplete bounded slice* of \`03-IMPLEMENTATION-SLICES.md\`. Route expert methodologies based on relevant source and domain, not 100 simultaneous agent prompts.
+2. The owner starts from S0 evidence and works the *first incomplete bounded slice* of `03-IMPLEMENTATION-SLICES.md`. Route expert methodologies based on relevant source and domain, not 100 simultaneous agent prompts.
 3. Use Serena semantic overview/symbol/reference/diagnostics to localize owning code; edit only owned files through guarded/CAS/JIT code path.
 4. Tests are **red before fix** where possible, **green at changed revision** afterward. Require failure/negative cases, missing/outdated source and independent consumer test appropriate to change.
 5. Repeated equivalent failure -> explicit strategy change, competing hypothesis/falsifier, no attempt masquerading via renamed timeout or tool arguments.
@@ -25,7 +25,7 @@
 | M3 Debug + FU intelligence | S3 + S4 | Task-scoped anti-loop/guard tests, forecast permission negative tests | NOT IMPLEMENTED |
 | M4 Governed learning | S5 | Sanitized provenance, stage transition and runtime restart readback | NOT IMPLEMENTED |
 | M5 Reliable independent services | S6 | Peer nonce/HMAC, Commander owner check, safe independent recovery | NOT VERIFIED |
-| M6 Host + tunnel integration | S7 + S8 | Real trusted Codex events, post-edit diagnostics, client \`tools/call\` | NOT VERIFIED |
+| M6 Host + tunnel integration | S7 + S8 | Real trusted Codex events, post-edit diagnostics, client `tools/call` | NOT VERIFIED |
 | M7 Release acceptance | S9 | Endurance/security/perf/consumer + installed revision + owner sign-off | NOT VERIFIED |
 
 Milestones may overlap on independent *read-only* validation only. A milestone is **not** given an arbitrary percentage from number of authored files. Use status matrix by test case.
@@ -40,7 +40,7 @@ Milestones may overlap on independent *read-only* validation only. A milestone i
 | C04 | Task ownership and authorization | UNBOUND/wrong scope/stale task/foreign owner denied, valid owner remains usable |
 | C05 | Skill manifest discovery | Invalid, duplicate, symlink/escape rejected; only installed enabled module reported |
 | C06 | CODEMIND-100 expertise | Registry and task-wiring provenance; one primary council, supporting methods only, no phantom agents |
-| C07 | Router materialization | Actual \`codemind_skill_route\` result, selected body read only if authorized; selected != executed |
+| C07 | Router materialization | Actual `codemind_skill_route` result, selected body read only if authorized; selected != executed |
 | C08 | Anti-loop first/second/third | First and second equivalent confirmed failures observed; third unchanged blocked; alternate tested input allowed |
 | C09 | Failure fingerprint | Volatile time/PID/line/duration normalized; real causal differences not collapsed |
 | C10 | Post-edit diagnostics | Real targeted Serena symbol/file diagnostics; current source; diagnostics alone not test pass |
@@ -87,7 +87,7 @@ Always emit which level each gate passed. L1 fixture does not satisfy L4 or L5.
 
 | Risk / historical lesson | Guard / preventive implementation | Falsifier |
 |---|---|---|
-| Windows PowerShell 5.1 crashes on ordinary \`uv\` stderr or missing modern .NET RNG APIs | Keep checked launcher compatibility and exit-code authority | Fresh PS 5.1/7 installation/start under real stdout/stderr |
+| Windows PowerShell 5.1 crashes on ordinary `uv` stderr or missing modern .NET RNG APIs | Keep checked launcher compatibility and exit-code authority | Fresh PS 5.1/7 installation/start under real stdout/stderr |
 | CODEMIND key configured but tunnel doctor fails due port conflict | Ephemeral loopback health port; typed cause-specific errors | Occupy 8080 and prove doctor still succeeds/fails for correct cause |
 | Service presence mislabeled healthy | Separate PID, nonce/HMAC, MCP initialized, observed-at | Spoof process; readiness remains unverified |
 | Codex hooks defined but never trusted/loaded | Host event support/trust and observed trace, bounded context | Normal startup without hook event must fail C17 |
@@ -105,11 +105,11 @@ Always emit which level each gate passed. L1 fixture does not satisfy L4 or L5.
 ## 6. Execution artifacts and status model
 
 Per completed slice produce:
-- \`decision.md\`: exact scope, owner, current source HEAD, selected skill methods and falsifier.
-- \`verification.json\`: test ID, command/environment, input identity, started/finished timestamps, exit code, retries/timeouts/skips, pass-or-inconclusive and log SHA; no secret content.
-- \`ui-interactions.json\`: if GUI affected, action ID -> backend method -> observed expected/negative, viewport screenshot refs.
-- \`diff-review.md\`: files changed and why, rollback plan, license source and no foreign hunks.
-- \`delivery.md\`: local commit, pushed ref, PR, merged remote commit, installed build SHA, consumer status **independently**.
+- `decision.md`: exact scope, owner, current source HEAD, selected skill methods and falsifier.
+- `verification.json`: test ID, command/environment, input identity, started/finished timestamps, exit code, retries/timeouts/skips, pass-or-inconclusive and log SHA; no secret content.
+- `ui-interactions.json`: if GUI affected, action ID -> backend method -> observed expected/negative, viewport screenshot refs.
+- `diff-review.md`: files changed and why, rollback plan, license source and no foreign hunks.
+- `delivery.md`: local commit, pushed ref, PR, merged remote commit, installed build SHA, consumer status **independently**.
 - Learning capture *after* verified result, using existing approved registry and task owner (not duplicate status ledger).
 
 Store under the existing CODEMIND repository docs/test artifact convention; do not create a new live NMBV source-of-truth file. Include a machine-readable current gate status in CODEMIND UI only if server has real persisted evidence.
@@ -120,8 +120,8 @@ Store under the existing CODEMIND repository docs/test artifact convention; do n
 
 1. Reconcile feature branch HEAD vs local checkout and current Serena process source.
 2. Establish baseline for overview, skills, tunnel, Commander and existing tests.
-3. Add failing v2 contract test around \`observed_at/source_revision/stale\` and \`null vs 0\`.
-4. Implement only those fields from available data or return \`UNVERIFIED\`.
+3. Add failing v2 contract test around `observed_at/source_revision/stale` and `null vs 0`.
+4. Implement only those fields from available data or return `UNVERIFIED`.
 5. Connect Overview/Skills/Connections components to real responses with typed error states.
 6. Execute Windows browser/keyboard/mobile click audit, no visual placeholders.
 7. Verify no new log-secret disclosures or Commander process interference.
@@ -129,4 +129,4 @@ Store under the existing CODEMIND repository docs/test artifact convention; do n
 9. Then begin CODEMIND expert/skill catalog import as S2.
 10. Branch to deterministic diagnosis if a step fails twice with equivalent fingerprint; don't blindly repeat it.
 
-**Release decision:** any required C01–C30 gate marked \`FAIL\`, \`BLOCKED\`, \`UNVERIFIED\` or \`TIMEOUT\` means full V2 remains INCOMPLETE; evidence of one implemented slice may still be reported accurately.
+**Release decision:** any required C01–C30 gate marked `FAIL`, `BLOCKED`, `UNVERIFIED` or `TIMEOUT` means full V2 remains INCOMPLETE; evidence of one implemented slice may still be reported accurately.
