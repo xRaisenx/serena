@@ -17,7 +17,7 @@ _INTENT_WORDS: dict[str, tuple[str, ...]] = {
 
 def classify_intent(request_text: str) -> str:
     if not isinstance(request_text, str) or not (3 <= len(request_text.strip()) <= 1000):
-        raise ValueError("Request must contain 3–1,000 characters")
+        raise ValueError("Request must contain 3-1,000 characters")
     words = set(re.findall(r"[a-z][a-z0-9-]*", request_text.lower()))
     scores = {name: len(words.intersection(triggers)) for name, triggers in _INTENT_WORDS.items()}
     best = max(scores.values())
