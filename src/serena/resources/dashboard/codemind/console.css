@@ -187,3 +187,19 @@ footer span{padding:0 7px}
 .route-form textarea:focus-visible{border-color:var(--accent)}
 .route-form button:disabled{opacity:.55;cursor:wait}
 @media(max-width:650px){.route-form{grid-template-columns:1fr}.route-form button{width:100%}#runtime-provenance{display:none}}
+
+/* V2 advisory intelligence: evidence typography, readable lists and compact method cards. */
+.method-reference-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-height:460px;overflow:auto;scrollbar-width:thin}
+.method-reference{border:1px solid var(--line);background:var(--panel2);padding:14px 16px;border-radius:10px;min-width:0}
+.method-reference strong{display:block;font-size:.84rem;overflow-wrap:anywhere}
+.method-reference p{font-size:.76rem;color:var(--muted);margin:6px 0 9px;line-height:1.5}
+.method-reference small{display:block;color:var(--quiet);font-size:.66rem;overflow-wrap:anywhere}
+.method-reference .method-source{color:var(--blue)}
+.forecast-subheading{margin:22px 0 12px;font-size:.92rem;color:var(--text)}
+.forecast-list{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.forecast-list li{counter-increment:item;border:1px solid var(--line);border-radius:10px;background:var(--panel2);padding:12px 14px;display:grid;gap:5px}
+.forecast-list strong{display:block;font-size:.81rem;overflow-wrap:anywhere}
+.forecast-list small{color:var(--muted);font-size:.74rem}
+.forecast-list .advisory-tag{color:var(--amber);font-size:.65rem;font-weight:740;letter-spacing:.06em}
+#forecast-canonical dd{max-width:65%;overflow-wrap:anywhere}
+@media(max-width:640px){.method-reference-grid{grid-template-columns:1fr}.forecast-list li{padding:11px}}
