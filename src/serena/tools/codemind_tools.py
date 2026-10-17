@@ -79,9 +79,8 @@ class CodemindSkillRouteTool(Tool):
 
         :param request: Engineering objective to classify.
         """
-        from serena.codemind.planner import SkillRouter
-
         from serena.codemind.methods import recommend_method_references
+        from serena.codemind.planner import SkillRouter
 
         registry = SkillManifestRegistry(Path(self.get_project_root()) / ".codemind" / "skills")
         route = SkillRouter(registry).route(request)
@@ -130,7 +129,6 @@ class CodemindForecastTool(Tool):
         from serena.codemind.futures import preview_actions
 
         return json.dumps(preview_actions(request, project_name=Path(self.get_project_root()).name), sort_keys=True)
-
 
 
 class CodemindCapabilitiesTool(Tool, ToolMarkerDoesNotRequireActiveProject):

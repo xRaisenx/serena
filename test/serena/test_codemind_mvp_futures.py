@@ -166,7 +166,6 @@ def test_post_cannot_mutate_method_catalog(client):
     assert client.post("/codemind/api/v2/methods", headers=_AUTH, json={}).status_code == 405
 
 
-
 def test_recommendation_across_25_reference_methods():
     data = recommend_method_references("deterministic debugging of recurring failures")
     assert data["schema"] == 2
