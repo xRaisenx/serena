@@ -40,18 +40,32 @@ class CodemindCommanderStatusTool(Tool):
 
     def apply(self) -> str:
         """Return Commander process presence; process presence is not MCP health."""
+        import os
+
         import psutil
+
+        from serena.codemind.health import CommanderHealthProbe
 
         entries = []
         for process in psutil.process_iter(attrs=["pid", "name"]):
             name = (process.info["name"] or "").lower()
             if name == "windowscommander.mcpserver.exe":
                 entries.append({"pid": process.info["pid"]})
+
+        endpoint = os.environ.get("CODEMIND_COMMANDER_HEALTH_URL")
+        token = os.environ.get("CODEMIND_COMMANDER_HEALTH_TOKEN")
+        health = {"ready": False, "authenticated": False, "reason": "not_configured"}
+        if endpoint and token:
+            status = CommanderHealthProbe(endpoint, token).check()
+            health = {"ready": status.ready, "authenticated": status.authenticated, "reason": status.reason}
+        elif endpoint or token:
+            health["reason"] = "incomplete_peer_configuration"
         return json.dumps(
             {
                 "commander_process_present": bool(entries),
                 "processes": entries,
-                "mcp_health_verified": False,
+                "mcp_health_verified": health["ready"] and health["authenticated"],
+                "peer_health": health,
             },
             sort_keys=True,
         )
