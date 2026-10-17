@@ -25,10 +25,9 @@ def ctl(tmp_path, monkeypatch):
     # Deterministic test surrogate for DPAPI; actual Windows DPAPI is
     # independently tested on the Windows host.
     def fake_dpapi(data, *, decrypt):
-        if decrypt:
-            assert data.startswith(b"ENCRYPTED:")
-            return data[len(b"ENCRYPTED:"):]
-        return b"ENCRYPTED:" + data
+        # Reversible deterministic stand-in; the plaintext must not remain
+        # directly visible in the persisted bytes. Real DPAPI is Windows-only.
+        return bytes(value ^ 0xA5 for value in data)
     monkeypatch.setattr(MODULE, "_dpapi", fake_dpapi)
     exe = tmp_path / "tunnel-client.exe"
     exe.write_bytes(b"dummy")
