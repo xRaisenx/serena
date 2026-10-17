@@ -77,6 +77,7 @@ def test_doctor_never_logs_or_returns_secret(ctl, monkeypatch):
     def fake_run(args, env, stdout, stderr, timeout, check):
         assert key == env["CONTROL_PLANE_API_KEY"]
         assert key not in repr(args)
+        assert args[-2:] == ["--health.listen-addr", "127.0.0.1:0"]
         assert stdout == subprocess.DEVNULL
         assert stderr == subprocess.DEVNULL
         return SimpleNamespace(returncode=0)
