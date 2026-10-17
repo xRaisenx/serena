@@ -167,3 +167,15 @@ footer span{padding:0 7px}
 @media(max-width:650px){.topbar{height:64px}.topbar-actions{gap:8px}.time-label{display:none}.user-avatar{display:none}.hero-card{padding:25px;min-height:240px}.hero-graphic{display:none}.page-heading{align-items:start}.page-heading .date-chip{display:none}.kpi{padding:16px}.kpi-grid{gap:11px}.tool-grid,.skill-grid{grid-template-columns:1fr}.panel{padding:18px}.panel-head{flex-wrap:wrap}.topo-connector{margin-left:24px}.topo-node{gap:9px}.topo-symbol{width:33px;height:33px;flex-basis:33px}.topo-node strong{font-size:.78rem}.topo-node small{font-size:.67rem}.date-chip{display:none}.content-width{padding-inline:15px}.topbar{padding-inline:14px}.breadcrumb{font-size:.72rem}.kpi-top{font-size:.58rem}}
 @media(max-width:360px){.kpi-grid{grid-template-columns:1fr}.topbar-actions .button{padding:8px;font-size:.72rem}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+
+/* Scope-limited tunnel configuration. Buttons remain accessible on narrow screens. */
+.config-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 13px;align-items:end;margin:16px 0 14px}
+.config-form label{grid-column:1/-1;font-size:.81rem;font-weight:750;color:var(--text)}
+.config-form input{min-width:0;width:100%;padding:12px 14px;background:var(--bg);border:1px solid var(--line);border-radius:9px;color:var(--text)}
+.config-form input:focus-visible{border-color:var(--accent)}
+.settings-description{color:var(--muted);font-size:.84rem;max-width:850px}
+.form-required{color:var(--muted);font-size:.73rem}
+.connection-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:16px 0}
+.connection-actions .button:disabled,.config-form .button:disabled{opacity:.58;cursor:wait}
+.result-note{color:var(--muted);background:var(--panel2);padding:12px 13px;border-radius:9px;font-size:.8rem;min-height:42px}
+@media(max-width:650px){.config-form{grid-template-columns:1fr}.config-form button{width:100%}.connection-actions .button{flex:1 1 140px;white-space:normal}}
