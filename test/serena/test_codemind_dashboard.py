@@ -101,3 +101,77 @@ def test_static_console_artifacts_present():
     assert "https://cdn.jsdelivr.net" not in html
     assert "operator-token" in html
     assert 'data-page="security"' in html
+
+
+def test_tunnel_api_rejects_anonymous_or_wrong_token(console):
+    assert console.post("/codemind/api/tunnel/doctor").status_code == 401
+    assert console.post(
+        "/codemind/api/tunnel/start", headers={"Authorization": "Bearer " + "z" * 40}
+    ).status_code == 401
+
+
+def test_tunnel_api_rejects_cross_origin(console):
+    result = console.post(
+        "/codemind/api/tunnel/key",
+        json={"api_key": "sk-proj-" + "a" * 60},
+        headers={"Authorization": "Bearer " + "c" * 40, "Origin": "https://evil.example"},
+    )
+    assert result.status_code == 403
+
+
+def test_tunnel_api_rejects_cross_site_fetch(console):
+    result = console.post(
+        "/codemind/api/tunnel/start",
+        headers={"Authorization": "Bearer " + "c" * 40, "Sec-Fetch-Site": "cross-site"},
+    )
+    assert result.status_code == 403
+
+
+def test_tunnel_key_never_leaks_to_client(console, monkeypatch):
+    from serena.codemind import dashboard_api
+
+    key = "sk-proj-" + "a" * 55
+    saved = []
+    monkeypatch.setattr(dashboard_api.tunnel_controller, "save_key", lambda s: saved.append(s))
+    response = console.post(
+        "/codemind/api/tunnel/key",
+        json={"api_key": key},
+        headers={"Authorization": "Bearer " + "c" * 40, "Origin": "http://localhost"},
+    )
+    assert response.status_code == 200
+    assert saved == [key]
+    assert key not in response.get_data(as_text=True)
+
+
+def test_doctor_failure_never_claims_success(console, monkeypatch):
+    from serena.codemind import dashboard_api
+
+    monkeypatch.setattr(
+        dashboard_api.tunnel_controller,
+        "doctor",
+        lambda: {"passed": False, "exit_code": 17, "message": "Tunnel diagnostics failed"},
+    )
+    result = console.post(
+        "/codemind/api/tunnel/doctor", headers={"Authorization": "Bearer " + "c" * 40}
+    )
+    assert result.status_code == 409
+    assert result.get_json()["passed"] is False
+
+
+def test_key_removal_not_possible_without_auth(console):
+    assert console.delete("/codemind/api/tunnel/key").status_code == 401
+
+
+def test_tunnel_start_does_not_imply_chatgpt_acceptance(console, monkeypatch):
+    from serena.codemind import dashboard_api
+
+    monkeypatch.setattr(
+        dashboard_api.tunnel_controller,
+        "start",
+        lambda: {"managed_process_running": True, "client_ready": False, "connection_verified": False},
+    )
+    response = console.post(
+        "/codemind/api/tunnel/start", headers={"Authorization": "Bearer " + "c" * 40}
+    )
+    assert response.status_code == 200
+    assert response.get_json()["tunnel"]["connection_verified"] is False
