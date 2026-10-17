@@ -1,0 +1,285 @@
+{
+  "schema_version": 1,
+  "scope": "DESIGN_CONTRACT_NOT_RUNTIME_DATA",
+  "ownership": {
+    "frontend": "src/serena/resources/dashboard/codemind/",
+    "backend": "src/serena/codemind/dashboard_api.py",
+    "api_root": "/codemind/api",
+    "v2_root": "/codemind/api/v2"
+  },
+  "rules": {
+    "do_not_enable_unimplemented_actions": true,
+    "nullable_counts_render_dash": true,
+    "negative_tests_required": true,
+    "secret_values_never_responded": true,
+    "source_revision_required_for_verified_badge": true,
+    "forecast_authorizes_execution": false
+  },
+  "existing_views": [
+    {
+      "id": "overview",
+      "label": "Overview",
+      "source": "/codemind/api/overview",
+      "state": "V1_IMPLEMENTED",
+      "actions": [
+        "refresh",
+        "export",
+        "theme_toggle",
+        "lock",
+        "go_connections"
+      ]
+    },
+    {
+      "id": "tools",
+      "label": "Code intelligence",
+      "source": "/codemind/api/overview#tools.active",
+      "state": "V1_IMPLEMENTED",
+      "actions": [
+        "filter",
+        "clear_filter",
+        "serena_workspace_link"
+      ]
+    },
+    {
+      "id": "skills",
+      "label": "Skills and routing",
+      "source": "/codemind/api/overview#skills.items",
+      "state": "V1_READ_ONLY",
+      "actions": [
+        "browse_skills"
+      ]
+    },
+    {
+      "id": "learning",
+      "label": "Failure and learning",
+      "source": "/codemind/api/overview#learning",
+      "state": "V1_COUNTS_ONLY",
+      "actions": []
+    },
+    {
+      "id": "execution",
+      "label": "Tasks and workers",
+      "source": "/codemind/api/overview#tasks.items",
+      "state": "V1_READ_ONLY",
+      "actions": []
+    },
+    {
+      "id": "commander",
+      "label": "Windows Commander",
+      "source": "/codemind/api/overview#commander",
+      "state": "V1_PRESENCE_ONLY",
+      "actions": []
+    },
+    {
+      "id": "connections",
+      "label": "Connections and API",
+      "source": "/codemind/api/tunnel/status",
+      "state": "V1_CONTROLS",
+      "actions": [
+        "save_tunnel_key",
+        "remove_tunnel_key",
+        "tunnel_doctor",
+        "start_managed_tunnel",
+        "stop_managed_tunnel"
+      ]
+    },
+    {
+      "id": "security",
+      "label": "Security and acceptance",
+      "source": "/codemind/api/overview#security",
+      "state": "V1_STATIC_ACCEPTANCE",
+      "actions": []
+    }
+  ],
+  "proposed_views": [
+    {
+      "id": "task-routing",
+      "label": "Skill router and CODEMIND-100",
+      "requires": [
+        "POST /codemind/api/v2/skills/route",
+        "GET /codemind/api/v2/experts"
+      ]
+    },
+    {
+      "id": "next-action",
+      "label": "Next action and FU",
+      "requires": [
+        "GET /codemind/api/v2/actions/next",
+        "GET /codemind/api/v2/actions/forecast"
+      ]
+    },
+    {
+      "id": "hooks",
+      "label": "Hooks and host integrations",
+      "requires": [
+        "GET /codemind/api/v2/hooks"
+      ]
+    },
+    {
+      "id": "settings",
+      "label": "Project and provider settings",
+      "requires": [
+        "GET /codemind/api/v2/projects",
+        "GET /codemind/api/v2/capabilities"
+      ]
+    }
+  ],
+  "action_bindings": [
+    {
+      "id": "refresh",
+      "ui": "#refresh-btn",
+      "verb": "GET",
+      "endpoint": "/codemind/api/overview",
+      "auth": "operator",
+      "ui_failure": [
+        "401 lock",
+        "network error",
+        "timeout stale"
+      ]
+    },
+    {
+      "id": "export",
+      "ui": "#export-btn",
+      "verb": "LOCAL",
+      "endpoint": null,
+      "auth": "operator",
+      "ui_failure": [
+        "no loaded snapshot"
+      ],
+      "data_policy": "redacted fields only"
+    },
+    {
+      "id": "theme_toggle",
+      "ui": "#theme-btn",
+      "verb": "LOCAL",
+      "endpoint": null,
+      "auth": "none",
+      "ui_failure": []
+    },
+    {
+      "id": "lock",
+      "ui": "#lock-btn",
+      "verb": "LOCAL",
+      "endpoint": null,
+      "auth": "operator",
+      "ui_failure": []
+    },
+    {
+      "id": "filter",
+      "ui": "#tool-search",
+      "verb": "LOCAL",
+      "endpoint": null,
+      "auth": "operator",
+      "ui_failure": [
+        "empty list"
+      ]
+    },
+    {
+      "id": "save_tunnel_key",
+      "ui": "#tunnel-key-form",
+      "verb": "POST",
+      "endpoint": "/codemind/api/tunnel/key",
+      "auth": "operator+same_origin",
+      "ui_failure": [
+        "401",
+        "403",
+        "400",
+        "413"
+      ],
+      "data_policy": "write-only DPAPI"
+    },
+    {
+      "id": "remove_tunnel_key",
+      "ui": "#tunnel-remove-key",
+      "verb": "DELETE",
+      "endpoint": "/codemind/api/tunnel/key",
+      "auth": "operator+same_origin+confirm",
+      "ui_failure": [
+        "409 running client"
+      ]
+    },
+    {
+      "id": "tunnel_doctor",
+      "ui": "#tunnel-doctor",
+      "verb": "POST",
+      "endpoint": "/codemind/api/tunnel/doctor",
+      "auth": "operator+same_origin",
+      "ui_failure": [
+        "409 missing key or diagnostics failed",
+        "timeout"
+      ]
+    },
+    {
+      "id": "start_managed_tunnel",
+      "ui": "#tunnel-start",
+      "verb": "POST",
+      "endpoint": "/codemind/api/tunnel/start",
+      "auth": "operator+same_origin",
+      "ui_failure": [
+        "409 doctor failed",
+        "timeout"
+      ]
+    },
+    {
+      "id": "stop_managed_tunnel",
+      "ui": "#tunnel-stop",
+      "verb": "POST",
+      "endpoint": "/codemind/api/tunnel/stop",
+      "auth": "operator+same_origin",
+      "ui_failure": [
+        "409 process not stopped",
+        "timeout"
+      ]
+    }
+  ],
+  "status_field_rules": [
+    {
+      "field": "tools.active_count",
+      "source": "/codemind/api/overview",
+      "unknown": "—",
+      "prohibits": [
+        "v2 runtime count without source"
+      ]
+    },
+    {
+      "field": "skills.items",
+      "source": "/codemind/api/overview",
+      "unknown": "No loaded skill evidence",
+      "prohibits": [
+        "display 25 reference skills as installed"
+      ]
+    },
+    {
+      "field": "learning.tracked_strategies",
+      "source": "/codemind/api/overview",
+      "unknown": "—",
+      "prohibits": [
+        "display failed experiments as applied lessons"
+      ]
+    },
+    {
+      "field": "commander.ready",
+      "source": "/codemind/api/overview",
+      "unknown": "UNVERIFIED",
+      "prohibits": [
+        "process presence => MCP ready"
+      ]
+    },
+    {
+      "field": "tunnel.client_ready",
+      "source": "/codemind/api/tunnel/status",
+      "unknown": "UNVERIFIED",
+      "prohibits": [
+        "doctor PASS => ChatGPT connected"
+      ]
+    },
+    {
+      "field": "tunnel.connection_verified",
+      "source": "/codemind/api/tunnel/status",
+      "unknown": "UNVERIFIED",
+      "prohibits": [
+        "poll ready => ChatGPT tool_call verified"
+      ]
+    }
+  ]
+}
