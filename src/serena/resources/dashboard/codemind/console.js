@@ -1,7 +1,7 @@
 /* CODEMIND Serena Mission Control. Same-origin, read-only. No secrets on disk. */
 "use strict";
 (() => {
-  const state = { token: "", snapshot: null, v2: null, catalog: null, view: "overview", theme: "dark", busy: false };
+  const state = { token: "", snapshot: null, v2: null, catalog: null, view: "overview", theme: "dark", busy: false, epoch: 0 };
   const byId = id => document.getElementById(id);
   const all = selector => Array.from(document.querySelectorAll(selector));
   const text = (id, value) => { const node = byId(id); if (node) node.textContent = value == null ? "—" : String(value); };
@@ -353,6 +353,8 @@
 
   async function refresh() {
     if (state.busy || !state.token) return;
+    const currentToken = state.token;
+    const currentEpoch = state.epoch;
     state.busy = true;
     byId("refresh-btn").disabled = true;
     const controller = new AbortController();
@@ -360,11 +362,12 @@
     try {
       const response = await fetch("/codemind/api/overview", {
         method: "GET", credentials: "same-origin", cache: "no-store",
-        headers: { "Authorization": "Bearer " + state.token, "Accept": "application/json" },
+        headers: { "Authorization": "Bearer " + currentToken, "Accept": "application/json" },
         signal: controller.signal,
       });
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
+          state.epoch += 1;
           state.token = "";
           state.snapshot = null;
           byId("workspace").hidden = true;
@@ -376,22 +379,24 @@
       }
       const data = await response.json();
       if (data.schema !== 1 || data.application !== "CODEMIND Serena") throw new Error("Unexpected dashboard data contract.");
-      state.snapshot = data;
-      state.v2 = null;
+      let v2Model = null;
       // V1 remains the compatibility API. V2 is evidence enrichment only.
       // If the v2 API is unavailable, continue displaying observed v1 values
       // without pretending the installed V2 slice is present.
       try {
         const v2response = await fetch("/codemind/api/v2/overview", {
           method: "GET", credentials: "same-origin", cache: "no-store",
-          headers: { Authorization: "Bearer " + state.token, Accept: "application/json" },
+          headers: { Authorization: "Bearer " + currentToken, Accept: "application/json" },
           signal: controller.signal,
         });
         if (v2response.ok) {
           const v2 = await v2response.json();
-          if (v2.schema === 2 && v2.application === "CODEMIND Serena") state.v2 = v2;
+          if (v2.schema === 2 && v2.application === "CODEMIND Serena") v2Model = v2;
         }
       } catch { /* V1 compatibility mode; no inferred V2 health. */ }
+      if (state.epoch !== currentEpoch || state.token !== currentToken) return false;
+      state.snapshot = data;
+      state.v2 = v2Model;
       render(data);
       byId("unlock").hidden = true;
       byId("workspace").hidden = false;
@@ -547,6 +552,7 @@
     await refresh();
   });
   byId("lock-btn").addEventListener("click", () => {
+    state.epoch += 1;
     state.token = ""; state.snapshot = null; state.v2 = null; state.catalog = null;
     byId("workspace").hidden = true; byId("unlock").hidden = false;
     byId("operator-token").focus(); notify("Session locked; no operator token retained.");
