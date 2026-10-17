@@ -102,6 +102,7 @@ class CodemindNextActionTool(Tool):
         action = NextActionPlanner(FailureGuard()).recommend(self.get_project_root(), tool_name, arguments)
         return json.dumps(action, sort_keys=True)
 
+
 class CodemindMethodCatalogTool(Tool, ToolMarkerDoesNotRequireActiveProject):
     """Discover CODEMIND's 25 source-backed reference methods, not installed skills."""
 
