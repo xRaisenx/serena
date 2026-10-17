@@ -6,7 +6,7 @@ from pathlib import Path
 
 from serena.codemind.learning import FailureGuard
 from serena.codemind.modules import SkillManifestRegistry
-from serena.tools.tools_base import Tool
+from serena.tools.tools_base import Tool, ToolMarkerDoesNotRequireActiveProject
 
 
 class CodemindListSkillsTool(Tool):
@@ -35,7 +35,7 @@ class CodemindFailureStatusTool(Tool):
         return json.dumps(result, sort_keys=True)
 
 
-class CodemindCommanderStatusTool(Tool):
+class CodemindCommanderStatusTool(Tool, ToolMarkerDoesNotRequireActiveProject):
     """Observe the independent Windows Commander process without restarting it."""
 
     def apply(self) -> str:
