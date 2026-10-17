@@ -5,6 +5,8 @@ on:
     paths:
       - "src/serena/codemind/**"
       - "src/serena/mcp.py"
+      - "src/serena/dashboard.py"
+      - "src/serena/resources/dashboard/codemind/**"
       - "src/serena/tools/codemind_tools.py"
       - "test/serena/test_codemind_*.py"
       - ".github/workflows/codemind-windows.yml"
@@ -25,7 +27,7 @@ jobs:
       - name: Compile changed Python modules
         shell: pwsh
         run: |
-          python -m py_compile src/serena/mcp.py src/serena/codemind/learning.py src/serena/codemind/modules.py src/serena/codemind/planner.py src/serena/codemind/health.py src/serena/tools/codemind_tools.py test/serena/test_codemind_guard.py test/serena/test_codemind_health.py test/serena/test_codemind_registry.py
+          python -m py_compile src/serena/mcp.py src/serena/codemind/learning.py src/serena/codemind/modules.py src/serena/codemind/planner.py src/serena/codemind/health.py src/serena/codemind/dashboard_api.py src/serena/dashboard.py src/serena/tools/codemind_tools.py test/serena/test_codemind_guard.py test/serena/test_codemind_health.py test/serena/test_codemind_registry.py test/serena/test_codemind_dashboard.py
       - name: Install isolated test framework
         shell: pwsh
         run: python -m pip install pytest
@@ -40,7 +42,10 @@ jobs:
         run: uv sync --extra dev --locked
       - name: Run Serena MCP registration and tool dispatch integration tests
         shell: pwsh
-        run: uv run --no-sync python -m pytest -q test/serena/test_codemind_registry.py test/serena/test_mcp.py
+        run: uv run --no-sync python -m pytest -q test/serena/test_codemind_registry.py test/serena/test_codemind_dashboard.py test/serena/test_mcp.py
       - name: Verify real subprocess MCP handshake tool discovery and call
         shell: pwsh
         run: uv run --no-sync python -m pytest -q test/serena/test_codemind_stdio.py
+      - name: Check dashboard JavaScript syntax
+        shell: pwsh
+        run: node --check src/serena/resources/dashboard/codemind/console.js
