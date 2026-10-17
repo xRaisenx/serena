@@ -48,10 +48,14 @@ class CodemindCommanderStatusTool(Tool):
             if name == "windowscommander.mcpserver.exe":
                 entries.append({"pid": process.info["pid"]})
         return json.dumps(
-            {"commander_process_present": bool(entries),
-             "processes": entries, "mcp_health_verified": False},
-            sort_keys=True
+            {
+                "commander_process_present": bool(entries),
+                "processes": entries,
+                "mcp_health_verified": False,
+            },
+            sort_keys=True,
         )
+
 
 class CodemindSkillRouteTool(Tool):
     """Select existing declared skills for the incoming engineering request."""
@@ -63,7 +67,9 @@ class CodemindSkillRouteTool(Tool):
         """
         from serena.codemind.planner import SkillRouter
 
-        registry = SkillManifestRegistry(Path(self.get_project_root()) / ".codemind" / "skills")
+        registry = SkillManifestRegistry(
+            Path(self.get_project_root()) / ".codemind" / "skills"
+        )
         return json.dumps(SkillRouter(registry).route(request), sort_keys=True)
 
 

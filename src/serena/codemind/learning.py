@@ -23,8 +23,12 @@ class FailureGuard:
     _lock = threading.RLock()
 
     def __init__(self, db_path: Path | None = None):
-        default_dir = Path(os.environ.get("LOCALAPPDATA") or Path.home()) / "CodemindSerena"
-        self._db_path = Path(db_path) if db_path is not None else default_dir / "failures.sqlite3"
+        default_dir = (
+            Path(os.environ.get("LOCALAPPDATA") or Path.home()) / "CodemindSerena"
+        )
+        self._db_path = (
+            Path(db_path) if db_path is not None else default_dir / "failures.sqlite3"
+        )
         self._db_path.parent.mkdir(parents=True, exist_ok=True)
         with self._connect() as db:
             db.execute(
@@ -47,9 +51,14 @@ class FailureGuard:
     def _key(cls, workspace: str, tool_name: str, arguments: dict[str, Any]) -> str:
         # Do not persist source code, credentials, arguments, or file names.
         serialized = json.dumps(
-            {"workspace": str(Path(workspace).resolve()).lower(),
-             "tool": tool_name, "args": arguments},
-            sort_keys=True, separators=(",", ":"), default=str
+            {
+                "workspace": str(Path(workspace).resolve()).lower(),
+                "tool": tool_name,
+                "args": arguments,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+            default=str,
         )
         return cls._digest(serialized)
 
@@ -73,9 +82,17 @@ class FailureGuard:
                     "Change the operation, inputs, or diagnostic hypothesis based on new evidence."
                 )
 
-    def failure(self, workspace: str, tool_name: str, arguments: dict[str, Any],
-                error: BaseException) -> int:
-        key, fingerprint = self._key(workspace, tool_name, arguments), self._failure(error)
+    def failure(
+        self,
+        workspace: str,
+        tool_name: str,
+        arguments: dict[str, Any],
+        error: BaseException,
+    ) -> int:
+        key, fingerprint = (
+            self._key(workspace, tool_name, arguments),
+            self._failure(error),
+        )
         with self._lock, self._connect() as db:
             row = db.execute(
                 "SELECT fingerprint, consecutive FROM attempts WHERE key=?", (key,)
@@ -85,23 +102,26 @@ class FailureGuard:
                 "INSERT INTO attempts(key,fingerprint,consecutive) VALUES(?,?,?) "
                 "ON CONFLICT(key) DO UPDATE SET fingerprint=excluded.fingerprint, "
                 "consecutive=excluded.consecutive, updated_at=CURRENT_TIMESTAMP",
-                (key, fingerprint, count)
+                (key, fingerprint, count),
             )
             return count
 
-    def success(self, workspace: str, tool_name: str, arguments: dict[str, Any]) -> None:
+    def success(
+        self, workspace: str, tool_name: str, arguments: dict[str, Any]
+    ) -> None:
         with self._lock, self._connect() as db:
             db.execute(
                 "DELETE FROM attempts WHERE key=?",
-                (self._key(workspace, tool_name, arguments),)
+                (self._key(workspace, tool_name, arguments),),
             )
 
-    def status(self, workspace: str, tool_name: str,
-               arguments: dict[str, Any]) -> dict[str, Any]:
+    def status(
+        self, workspace: str, tool_name: str, arguments: dict[str, Any]
+    ) -> dict[str, Any]:
         with self._lock, self._connect() as db:
             row = db.execute(
                 "SELECT consecutive, updated_at FROM attempts WHERE key=?",
-                (self._key(workspace, tool_name, arguments),)
+                (self._key(workspace, tool_name, arguments),),
             ).fetchone()
         return {
             "consecutive_failures": row[0] if row else 0,

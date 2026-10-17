@@ -10,7 +10,13 @@ import importlib.util
 
 
 def _load_module(name: str):
-    source = Path(__file__).resolve().parents[2] / "src" / "serena" / "codemind" / (name + ".py")
+    source = (
+        Path(__file__).resolve().parents[2]
+        / "src"
+        / "serena"
+        / "codemind"
+        / (name + ".py")
+    )
     spec = importlib.util.spec_from_file_location("codemind_test_" + name, source)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
@@ -30,7 +36,15 @@ def test_two_equivalent_failures_block_third_even_after_restart(tmp_path: Path):
     first = FailureGuard(db)
     for attempt in range(2):
         first.check(str(tmp_path), "find_symbol", {"name_path": "Foo"})
-        assert first.failure(str(tmp_path), "find_symbol", {"name_path": "Foo"}, ValueError("Missing 123")) == attempt + 1
+        assert (
+            first.failure(
+                str(tmp_path),
+                "find_symbol",
+                {"name_path": "Foo"},
+                ValueError("Missing 123"),
+            )
+            == attempt + 1
+        )
     second = FailureGuard(db)
     with pytest.raises(StrategyChangeRequired):
         second.check(str(tmp_path), "find_symbol", {"name_path": "Foo"})
@@ -39,7 +53,9 @@ def test_two_equivalent_failures_block_third_even_after_restart(tmp_path: Path):
 def test_changed_strategy_remains_permitted(tmp_path: Path):
     guard = FailureGuard(tmp_path / "state.db")
     for _ in range(2):
-        guard.failure(str(tmp_path), "find_symbol", {"name_path": "Foo"}, ValueError("missing"))
+        guard.failure(
+            str(tmp_path), "find_symbol", {"name_path": "Foo"}, ValueError("missing")
+        )
     guard.check(str(tmp_path), "get_symbols_overview", {"relative_path": "x.py"})
     guard.check(str(tmp_path), "find_symbol", {"name_path": "Bar"})
 
@@ -47,7 +63,9 @@ def test_changed_strategy_remains_permitted(tmp_path: Path):
 def test_success_resets_strategy(tmp_path: Path):
     guard = FailureGuard(tmp_path / "state.db")
     for _ in range(2):
-        guard.failure(str(tmp_path), "find_symbol", {"name_path": "Foo"}, ValueError("missing"))
+        guard.failure(
+            str(tmp_path), "find_symbol", {"name_path": "Foo"}, ValueError("missing")
+        )
     guard.success(str(tmp_path), "find_symbol", {"name_path": "Foo"})
     guard.check(str(tmp_path), "find_symbol", {"name_path": "Foo"})
 
@@ -55,9 +73,18 @@ def test_success_resets_strategy(tmp_path: Path):
 def test_different_error_resets_equivalence_count(tmp_path: Path):
     guard = FailureGuard(tmp_path / "state.db")
     for _ in range(2):
-        guard.failure(str(tmp_path), "find_symbol", {"name_path": "Foo"}, ValueError("bad"))
-    guard.failure(str(tmp_path), "find_symbol", {"name_path": "Foo"}, RuntimeError("different"))
-    assert guard.status(str(tmp_path), "find_symbol", {"name_path": "Foo"})["consecutive_failures"] == 1
+        guard.failure(
+            str(tmp_path), "find_symbol", {"name_path": "Foo"}, ValueError("bad")
+        )
+    guard.failure(
+        str(tmp_path), "find_symbol", {"name_path": "Foo"}, RuntimeError("different")
+    )
+    assert (
+        guard.status(str(tmp_path), "find_symbol", {"name_path": "Foo"})[
+            "consecutive_failures"
+        ]
+        == 1
+    )
 
 
 def test_skill_manifests_reload_without_recompiling(tmp_path: Path):
@@ -65,8 +92,13 @@ def test_skill_manifests_reload_without_recompiling(tmp_path: Path):
     folder.mkdir()
     registry = SkillManifestRegistry(folder)
     assert registry.list_skills() == []
-    sample = {"id": "debugging", "version": "1", "description": "Review evidence",
-              "instructions": "Reproduce and isolate.", "enabled": True}
+    sample = {
+        "id": "debugging",
+        "version": "1",
+        "description": "Review evidence",
+        "instructions": "Reproduce and isolate.",
+        "enabled": True,
+    }
     (folder / "debugging.json").write_text(json.dumps(sample), encoding="utf-8")
     assert registry.list_skills()[0]["id"] == "debugging"
     sample["enabled"] = False
@@ -86,10 +118,17 @@ def test_routing_matches_manifest_metadata(tmp_path: Path):
     planner = _load_module("planner")
     folder = tmp_path / "skills"
     folder.mkdir()
-    manifest = {"id": "debugging", "version": "1", "description": "Inspect a debugging failure",
-                "instructions": "Use source evidence.", "enabled": True}
+    manifest = {
+        "id": "debugging",
+        "version": "1",
+        "description": "Inspect a debugging failure",
+        "instructions": "Use source evidence.",
+        "enabled": True,
+    }
     (folder / "debugging.json").write_text(json.dumps(manifest), encoding="utf-8")
-    result = planner.SkillRouter(SkillManifestRegistry(folder)).route("debugging failure")
+    result = planner.SkillRouter(SkillManifestRegistry(folder)).route(
+        "debugging failure"
+    )
     assert result["selected"][0]["skill_id"] == "debugging"
     assert result["authorization_granted"] is False
 
@@ -99,7 +138,10 @@ def test_next_action_changes_strategy_without_authorizing(tmp_path: Path):
     guard = FailureGuard(tmp_path / "guard.db")
     action = planner.NextActionPlanner(guard)
     target = {"name_path": "Foo"}
-    assert action.recommend(str(tmp_path), "find_symbol", target)["action"] == "INSPECT_CURRENT_EVIDENCE"
+    assert (
+        action.recommend(str(tmp_path), "find_symbol", target)["action"]
+        == "INSPECT_CURRENT_EVIDENCE"
+    )
     for _ in range(2):
         guard.failure(str(tmp_path), "find_symbol", target, ValueError("absent"))
     result = action.recommend(str(tmp_path), "find_symbol", target)

@@ -28,7 +28,11 @@ from serena.agent import (
     SerenaAgent,
 )
 from serena.config.context_mode import SerenaAgentContext
-from serena.config.serena_config import AgentInterface, ModeSelectionDefinition, SerenaConfig
+from serena.config.serena_config import (
+    AgentInterface,
+    ModeSelectionDefinition,
+    SerenaConfig,
+)
 from serena.constants import DEFAULT_CONTEXT, SERENA_LOG_FORMAT
 from serena.language_backend import LanguageBackend
 from serena.tools import Tool, ToolCallError
@@ -42,7 +46,9 @@ def configure_logging(*args, **kwargs) -> None:
     # We only do something here if logging has not yet been configured.
     # Normally, logging is configured in the MCP server startup script.
     if not logging.is_enabled():
-        logging.basicConfig(level=logging.INFO, stream=sys.stderr, format=SERENA_LOG_FORMAT)
+        logging.basicConfig(
+            level=logging.INFO, stream=sys.stderr, format=SERENA_LOG_FORMAT
+        )
 
 
 # patch the logging configuration function in fastmcp, because it's hard-coded and broken
@@ -83,7 +89,9 @@ class SerenaMCPRequestContext:
 
 
 class SerenaFastMCPTool(FastMCPTool):
-    def __init__(self, tool: Tool, openai_tool_compatible: bool, structured_output: bool | None):
+    def __init__(
+        self, tool: Tool, openai_tool_compatible: bool, structured_output: bool | None
+    ):
         """
         :param tool: the Serena tool
         :param openai_tool_compatible: whether to process the tool schema to be compatible with OpenAI tools
@@ -92,7 +100,9 @@ class SerenaFastMCPTool(FastMCPTool):
         """
         func_name = tool.get_name()
         func_doc = tool.get_apply_docstring() or ""
-        func_arg_metadata = tool.get_apply_fn_metadata(structured_output=structured_output)
+        func_arg_metadata = tool.get_apply_fn_metadata(
+            structured_output=structured_output
+        )
         is_async = False
         parameters = func_arg_metadata.arg_model.model_json_schema()
         if openai_tool_compatible:
@@ -102,7 +112,9 @@ class SerenaFastMCPTool(FastMCPTool):
 
         # Mount the tool description as a combination of the docstring description and
         # the return value description, if it exists.
-        overridden_description = tool.agent.get_context().tool_description_overrides.get(func_name, None)
+        overridden_description = (
+            tool.agent.get_context().tool_description_overrides.get(func_name, None)
+        )
 
         if overridden_description is not None:
             func_doc = overridden_description
@@ -113,7 +125,9 @@ class SerenaFastMCPTool(FastMCPTool):
         func_doc = func_doc.strip().strip(".")
         if func_doc:
             func_doc += "."
-        if docstring.returns and (docstring_returns_descr := docstring.returns.description):
+        if docstring.returns and (
+            docstring_returns_descr := docstring.returns.description
+        ):
             # Only add a space before "Returns" if func_doc is not empty
             prefix = " " if func_doc else ""
             func_doc = f"{func_doc}{prefix}Returns {docstring_returns_descr.strip().strip('.')}."
@@ -130,6 +144,7 @@ class SerenaFastMCPTool(FastMCPTool):
         def execute_fn(**kwargs) -> str:
             # CODEMIND: enforce repeat-failure safety at the actual MCP dispatch boundary.
             from serena.codemind.learning import FailureGuard
+
             try:
                 workspace = tool.get_project_root()
             except (RuntimeError, ValueError, AttributeError):
@@ -296,7 +311,12 @@ class SerenaMCPFactory:
                         node[key] = simplified
 
             # ---- recurse into known schema containers ----
-            for child_key in ("properties", "patternProperties", "definitions", "$defs"):
+            for child_key in (
+                "properties",
+                "patternProperties",
+                "definitions",
+                "$defs",
+            ):
                 if child_key in node and isinstance(node[child_key], dict):
                     for k, v in list(node[child_key].items()):
                         node[child_key][k] = walk(v)
@@ -322,7 +342,11 @@ class SerenaMCPFactory:
         return walk(s)
 
     @staticmethod
-    def make_mcp_tool(tool: Tool, openai_tool_compatible: bool = True, structured_output: bool | None = None) -> SerenaFastMCPTool:
+    def make_mcp_tool(
+        tool: Tool,
+        openai_tool_compatible: bool = True,
+        structured_output: bool | None = None,
+    ) -> SerenaFastMCPTool:
         """
         Creates an MCP tool from a Serena Tool instance.
 
@@ -331,14 +355,20 @@ class SerenaMCPFactory:
             (doesn't accept integer, needs number instead, etc.). This allows using Serena MCP within codex.
         :param structured_output: whether to use structured output for the tool (None = auto)
         """
-        return SerenaFastMCPTool(tool, openai_tool_compatible=openai_tool_compatible, structured_output=structured_output)
+        return SerenaFastMCPTool(
+            tool,
+            openai_tool_compatible=openai_tool_compatible,
+            structured_output=structured_output,
+        )
 
     def _iter_tools(self) -> Iterator[Tool]:
         assert self.agent is not None
         yield from self.agent.get_exposed_tool_instances()
 
     # noinspection PyProtectedMember
-    def _set_mcp_tools(self, mcp: FastMCP, openai_tool_compatible: bool, structured_output: bool | None) -> None:
+    def _set_mcp_tools(
+        self, mcp: FastMCP, openai_tool_compatible: bool, structured_output: bool | None
+    ) -> None:
         """
         Update the tools in the MCP server
 
@@ -349,12 +379,21 @@ class SerenaMCPFactory:
         if mcp is not None:
             mcp._tool_manager._tools = {}
             for tool in self._iter_tools():
-                mcp_tool = self.make_mcp_tool(tool, openai_tool_compatible=openai_tool_compatible, structured_output=structured_output)
+                mcp_tool = self.make_mcp_tool(
+                    tool,
+                    openai_tool_compatible=openai_tool_compatible,
+                    structured_output=structured_output,
+                )
                 mcp._tool_manager._tools[tool.get_name()] = mcp_tool
-            log.info(f"Starting MCP server with {len(mcp._tool_manager._tools)} tools: {list(mcp._tool_manager._tools.keys())}")
+            log.info(
+                f"Starting MCP server with {len(mcp._tool_manager._tools)} tools: {list(mcp._tool_manager._tools.keys())}"
+            )
 
     def _create_serena_agent(
-        self, serena_config: SerenaConfig, modes: ModeSelectionDefinition | None = None, project_activation_error: str | None = None
+        self,
+        serena_config: SerenaConfig,
+        modes: ModeSelectionDefinition | None = None,
+        project_activation_error: str | None = None,
     ) -> SerenaAgent:
         return SerenaAgent(
             project=self.project,
@@ -373,7 +412,8 @@ class SerenaMCPFactory:
         enable_web_dashboard: bool | None = None,
         enable_gui_log_window: bool | None = None,
         open_web_dashboard: bool | None = None,
-        log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] | None = None,
+        log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+        | None = None,
         trace_lsp_communication: bool | None = None,
         tool_timeout: float | None = None,
         project_activation_error: str | None = None,
@@ -406,7 +446,10 @@ class SerenaMCPFactory:
             if open_web_dashboard is not None:
                 config.web_dashboard_open_on_launch = open_web_dashboard
             if log_level is not None:
-                log_level = cast(Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"], log_level.upper())
+                log_level = cast(
+                    Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+                    log_level.upper(),
+                )
                 config.log_level = logging.getLevelNamesMapping()[log_level]
             if trace_lsp_communication is not None:
                 config.trace_lsp_communication = trace_lsp_communication
@@ -417,7 +460,11 @@ class SerenaMCPFactory:
             if agent_interface is not None:
                 config.agent_interface = agent_interface
 
-            self.agent = self._create_serena_agent(config, modes=mode_selection_def, project_activation_error=project_activation_error)
+            self.agent = self._create_serena_agent(
+                config,
+                modes=mode_selection_def,
+                project_activation_error=project_activation_error,
+            )
 
         except Exception as e:
             show_fatal_exception_safe(e)
@@ -443,10 +490,18 @@ class SerenaMCPFactory:
 
         :param mcp_server: the MCP server instance to configure
         """
-        openai_tool_compatible = self.context.name in ["chatgpt", "codex", "oaicompat-agent"]
+        openai_tool_compatible = self.context.name in [
+            "chatgpt",
+            "codex",
+            "oaicompat-agent",
+        ]
         assert self.agent is not None
         context = self.agent.get_context()
-        self._set_mcp_tools(mcp_server, openai_tool_compatible=openai_tool_compatible, structured_output=context.structured_tool_output)
+        self._set_mcp_tools(
+            mcp_server,
+            openai_tool_compatible=openai_tool_compatible,
+            structured_output=context.structured_tool_output,
+        )
         log.info("MCP server lifetime setup complete")
         try:
             yield
