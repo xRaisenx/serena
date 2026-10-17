@@ -4,6 +4,9 @@ on:
   pull_request:
     paths:
       - "src/serena/codemind/**"
+      - ".codex/hooks.json"
+      - ".codex/hooks/**"
+      - "test/serena/test_codemind_hooks.cjs"
       - "src/serena/mcp.py"
       - "src/serena/dashboard.py"
       - "src/serena/resources/dashboard/codemind/**"
@@ -58,6 +61,17 @@ jobs:
       - name: Verify real subprocess MCP handshake tool discovery and call
         shell: pwsh
         run: uv run --no-sync python -m pytest -q test/serena/test_codemind_stdio.py
+      - name: Verify all CODEMIND Codex lifecycle hooks on Windows
+        shell: pwsh
+        run: |
+          node --check .codex/hooks/codemind-hooks.cjs
+          node --test test/serena/test_codemind_hooks.cjs
+      - name: Check Codex project hook registry JSON
+        shell: pwsh
+        run: |
+          $config = Get-Content .codex/hooks.json -Raw | ConvertFrom-Json
+          if (@($config.hooks.PSObject.Properties).Count -ne 11) { throw 'Expected 11 hook events' }
+          Write-Host 'CODEMIND_11_HOOKS_CONFIGURED'
       - name: Check dashboard JavaScript syntax
         shell: pwsh
         run: node --check src/serena/resources/dashboard/codemind/console.js
