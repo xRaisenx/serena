@@ -259,12 +259,14 @@ def register_codemind_routes(app: Any, agent: Any, tool_names: list[str], tool_u
     @bp.get("/v2/capabilities")
     def capabilities_v2() -> Any:
         current = build_v2_overview(collect_overview())
-        return jsonify({
-            "schema": 2,
-            "observed_at": current["observed_at"],
-            "source": current["source"],
-            "capabilities": current["capabilities"],
-        })
+        return jsonify(
+            {
+                "schema": 2,
+                "observed_at": current["observed_at"],
+                "source": current["source"],
+                "capabilities": current["capabilities"],
+            }
+        )
 
     @bp.post("/v2/skills/route")
     def route_skills_v2() -> Any:
@@ -277,24 +279,35 @@ def register_codemind_routes(app: Any, agent: Any, tool_names: list[str], tool_u
             abort(400)
         project, project_status = project_info()
         if project is None:
-            return jsonify({"schema": 2, "state": "NO_ACTIVE_PROJECT", "selected": [], "loaded": [], "executed": [],
-                            "authorization_granted": False}), 409
+            return jsonify(
+                {"schema": 2, "state": "NO_ACTIVE_PROJECT", "selected": [], "loaded": [], "executed": [], "authorization_granted": False}
+            ), 409
         try:
             registry = SkillManifestRegistry(Path(project.project_root) / ".codemind" / "skills")
             routed = SkillRouter(registry).route(task)
         except (OSError, ValueError, TypeError):
-            return jsonify({"schema": 2, "state": "SKILL_VALIDATION_FAILED", "selected": [], "loaded": [],
-                            "executed": [], "authorization_granted": False}), 422
-        return jsonify({
-            "schema": 2,
-            "state": "ROUTED",
-            "project": project_status["name"],
-            "mode": routed["mode"],
-            "selected": routed["selected"],
-            "loaded": [],
-            "executed": [],
-            "authorization_granted": False,
-        })
+            return jsonify(
+                {
+                    "schema": 2,
+                    "state": "SKILL_VALIDATION_FAILED",
+                    "selected": [],
+                    "loaded": [],
+                    "executed": [],
+                    "authorization_granted": False,
+                }
+            ), 422
+        return jsonify(
+            {
+                "schema": 2,
+                "state": "ROUTED",
+                "project": project_status["name"],
+                "mode": routed["mode"],
+                "selected": routed["selected"],
+                "loaded": [],
+                "executed": [],
+                "authorization_granted": False,
+            }
+        )
 
     app.register_blueprint(bp, url_prefix="/codemind/api")
 

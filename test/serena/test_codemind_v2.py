@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Real CODEMIND v2 read-model and advisory route regression contracts."""
+
 from __future__ import annotations
 
 import json
@@ -97,9 +98,7 @@ def test_v2_unknown_counts_never_become_zero():
         "tunnel": {"client_ready": False, "connection_verified": False},
     }
     result = build_v2_overview(snapshot, observed_at="2026-10-18T00:00:00Z")
-    assert result["metrics"] == {
-        "active_tools": None, "enabled_skills": None, "tracked_failures": None, "blocked_loops": None
-    }
+    assert result["metrics"] == {"active_tools": None, "enabled_skills": None, "tracked_failures": None, "blocked_loops": None}
     assert result["services"]["commander"]["processes_seen"] == 1
     assert result["services"]["commander"]["state"] == "UNVERIFIED"
 
@@ -132,15 +131,22 @@ def test_routing_real_project_manifests_and_no_execution(monkeypatch, tmp_path):
     monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "runtime"))
     skills = tmp_path / ".codemind" / "skills"
     skills.mkdir(parents=True)
-    (skills / "debug.json").write_text(json.dumps({
-        "id": "deterministic-debugging", "version": "1",
-        "description": "reproduce and debug errors", "instructions": "Inspect source",
-        "enabled": True
-    }), encoding="utf-8")
+    (skills / "debug.json").write_text(
+        json.dumps(
+            {
+                "id": "deterministic-debugging",
+                "version": "1",
+                "description": "reproduce and debug errors",
+                "instructions": "Inspect source",
+                "enabled": True,
+            }
+        ),
+        encoding="utf-8",
+    )
     client = build_client(monkeypatch, FakeAgent(FakeProject(tmp_path)))
-    response = client.post("/codemind/api/v2/skills/route",
-                           headers={**_TOKEN, "Origin": "http://localhost"},
-                           json={"request_text": "debug recurring errors"})
+    response = client.post(
+        "/codemind/api/v2/skills/route", headers={**_TOKEN, "Origin": "http://localhost"}, json={"request_text": "debug recurring errors"}
+    )
     assert response.status_code == 200
     payload = response.get_json()
     assert payload["state"] == "ROUTED"
@@ -150,18 +156,28 @@ def test_routing_real_project_manifests_and_no_execution(monkeypatch, tmp_path):
     assert payload["authorization_granted"] is False
 
 
-@pytest.mark.parametrize("payload", [{}, {"request_text": ""}, {"request_text": 32},
-                                      {"request_text": "aa"}, {"request_text": "a" * 1001},
-                                      {"request_text": "debug", "grant": True}])
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {},
+        {"request_text": ""},
+        {"request_text": 32},
+        {"request_text": "aa"},
+        {"request_text": "a" * 1001},
+        {"request_text": "debug", "grant": True},
+    ],
+)
 def test_invalid_route_payload_rejected(client, payload):
     response = client.post("/codemind/api/v2/skills/route", headers=_TOKEN, json=payload)
     assert response.status_code in (400, 413)
 
 
 def test_cross_origin_cannot_route(client):
-    response = client.post("/codemind/api/v2/skills/route",
-                           headers={**_TOKEN, "Origin": "https://attacker.example"},
-                           json={"request_text": "debug recurring errors"})
+    response = client.post(
+        "/codemind/api/v2/skills/route",
+        headers={**_TOKEN, "Origin": "https://attacker.example"},
+        json={"request_text": "debug recurring errors"},
+    )
     assert response.status_code == 403
 
 

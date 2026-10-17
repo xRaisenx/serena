@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """CODEMIND v2 read model. No state mutation and no inferred acceptance."""
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 
@@ -13,7 +14,7 @@ def build_v2_overview(v1: dict[str, Any], *, observed_at: str | None = None) -> 
     A listening peer, running process or local tunnel readiness is never a
     substitute for an authenticated end-to-end consumer tool call.
     """
-    when = observed_at or datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    when = observed_at or datetime.now(UTC).isoformat().replace("+00:00", "Z")
     tools = v1.get("tools") or {}
     skills = v1.get("skills") or {}
     learning = v1.get("learning") or {}
