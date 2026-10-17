@@ -24,18 +24,25 @@ if (-not $env:LOCALAPPDATA) { throw 'LOCALAPPDATA is required for the operator t
 if ([string]::IsNullOrWhiteSpace($env:CODEMIND_DASHBOARD_TOKEN)) {
     $store = Join-Path $env:LOCALAPPDATA 'CODEMIND-Serena'
     [void][IO.Directory]::CreateDirectory($store)
-    $identity = [Security.Principal.WindowsIdentity]::GetCurrent().Name
-    $acl = Get-Acl -LiteralPath $store
-    $acl.SetAccessRuleProtection($true, $false)
-    $rule = [Security.AccessControl.FileSystemAccessRule]::new(
-        $identity, 'FullControl', 'ContainerInherit,ObjectInherit', 'None', 'Allow'
-    )
-    $acl.AddAccessRule($rule)
-    Set-Acl -LiteralPath $store -AclObject $acl
     $tokenFile = Join-Path $store 'dashboard-operator-token.txt'
     if (Test-Path -LiteralPath $tokenFile) {
+        # Existing installation: do not alter ACLs or regenerate the key.
         $env:CODEMIND_DASHBOARD_TOKEN = [IO.File]::ReadAllText($tokenFile).Trim()
     } else {
+        # Do not depend on Get-Acl/Set-Acl module autoload in detached
+        # Windows PowerShell 5.1 hosts. Apply a user-only directory DACL
+        # before the token file is created. icacls is available on Windows.
+        $ownerSid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+        $grant = '*' + $ownerSid + ':(OI)(CI)F'
+        $icacls = Join-Path $env:WINDIR 'System32\\icacls.exe'
+        if (-not (Test-Path -LiteralPath $icacls)) {
+            throw 'Windows ACL utility is unavailable; refusing to store an unprotected token.'
+        }
+        $aclOutput = & $icacls $store '/inheritance:r' '/grant:r' $grant 2>&1
+        $aclCode = $LASTEXITCODE
+        if ($aclCode -ne 0) {
+            throw ('Token directory access restriction failed (' + $aclCode + '): ' + $aclOutput)
+        }
         # Works on Windows PowerShell 5.1 (.NET Framework) and PowerShell 7+.
         # The static RandomNumberGenerator.GetBytes(int) and Convert.ToHexString
         # APIs are unavailable on some supported runtimes.
