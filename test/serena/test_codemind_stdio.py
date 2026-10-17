@@ -17,6 +17,8 @@ async def _smoke() -> None:
             "start-mcp-server",
             "--transport",
             "stdio",
+            "--agent-interface",
+            "tools",
             "--enable-web-dashboard",
             "false",
             "--open-web-dashboard",
@@ -28,7 +30,7 @@ async def _smoke() -> None:
     async with stdio_client(params) as (read, write):
         async with ClientSession(read, write) as client:
             initialized = await asyncio.wait_for(client.initialize(), timeout=60)
-            assert initialized.serverInfo.name
+            assert initialized.server_info.name
             tools = await asyncio.wait_for(client.list_tools(), timeout=30)
             names = {tool.name for tool in tools.tools}
             assert "codemind_commander_status" in names
