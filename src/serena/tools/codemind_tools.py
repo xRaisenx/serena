@@ -130,3 +130,31 @@ class CodemindForecastTool(Tool):
         from serena.codemind.futures import preview_actions
 
         return json.dumps(preview_actions(request, project_name=Path(self.get_project_root()).name), sort_keys=True)
+
+
+
+class CodemindCapabilitiesTool(Tool, ToolMarkerDoesNotRequireActiveProject):
+    """Report actual CODEMIND module contracts separately from live service proof."""
+
+    def apply(self) -> str:
+        """Return available local CODEMIND methods and honest capability boundaries."""
+        from serena.codemind.methods import load_method_catalog
+
+        catalog = load_method_catalog()
+        return json.dumps(
+            {
+                "schema": 2,
+                "application": "CODEMIND Serena",
+                "method_reference_catalog": {"state": "REFERENCE_ONLY", "count": catalog["count"]},
+                "skill_discovery": "PROJECT_MANIFEST_REQUIRED",
+                "skill_router": "DETERMINISTIC_ADVISORY",
+                "fu_next_action": "DETERMINISTIC_ADVISORY",
+                "failure_guard": "PERSISTED_INVOCATION_PRECHECK",
+                "governed_learning_promotion": "NOT_IMPLEMENTED",
+                "codemind_100_expert_workers": "NOT_IMPLEMENTED",
+                "commander_peer": "NOT_ATTESTED_BY_THIS_TOOL",
+                "chatgpt_remote_acceptance": "NOT_ATTESTED_BY_THIS_TOOL",
+                "authorization_granted": False,
+            },
+            sort_keys=True,
+        )
