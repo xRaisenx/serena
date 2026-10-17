@@ -37,7 +37,7 @@ async def _smoke() -> None:
             assert "codemind_failure_status" in names
             assert "find_symbol" in names
             response = await asyncio.wait_for(client.call_tool("codemind_commander_status", arguments={}), timeout=30)
-            assert not response.isError
+            assert not response.is_error
             assert any("mcp_health_verified" in str(block) for block in response.content)
 
 
