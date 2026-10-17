@@ -52,3 +52,36 @@ class CodemindCommanderStatusTool(Tool):
              "processes": entries, "mcp_health_verified": False},
             sort_keys=True
         )
+
+class CodemindSkillRouteTool(Tool):
+    """Select existing declared skills for the incoming engineering request."""
+
+    def apply(self, request: str) -> str:
+        """Return a deterministic skill match; selection does not authorize execution.
+
+        :param request: Engineering objective to classify.
+        """
+        from serena.codemind.planner import SkillRouter
+
+        registry = SkillManifestRegistry(Path(self.get_project_root()) / ".codemind" / "skills")
+        return json.dumps(SkillRouter(registry).route(request), sort_keys=True)
+
+
+class CodemindNextActionTool(Tool):
+    """Choose an evidence-constrained diagnostic action without executing it."""
+
+    def apply(self, tool_name: str, arguments_json: str = "{}") -> str:
+        """Suggest a changed approach based on stored equivalent failure evidence.
+
+        :param tool_name: Exact tool whose strategy is being evaluated.
+        :param arguments_json: JSON object of the original tool parameters.
+        """
+        from serena.codemind.planner import NextActionPlanner
+
+        arguments = json.loads(arguments_json)
+        if not isinstance(arguments, dict):
+            raise ValueError("arguments_json must be an object")
+        action = NextActionPlanner(FailureGuard()).recommend(
+            self.get_project_root(), tool_name, arguments
+        )
+        return json.dumps(action, sort_keys=True)

@@ -80,3 +80,29 @@ def test_invalid_manifests_fail_closed(tmp_path: Path):
     (folder / "bad.json").write_text('{"id":"bad"}', encoding="utf-8")
     with pytest.raises(ValueError):
         SkillManifestRegistry(folder).list_skills()
+
+
+def test_routing_matches_manifest_metadata(tmp_path: Path):
+    planner = _load_module("planner")
+    folder = tmp_path / "skills"
+    folder.mkdir()
+    manifest = {"id": "debugging", "version": "1", "description": "Inspect a debugging failure",
+                "instructions": "Use source evidence.", "enabled": True}
+    (folder / "debugging.json").write_text(json.dumps(manifest), encoding="utf-8")
+    result = planner.SkillRouter(SkillManifestRegistry(folder)).route("debugging failure")
+    assert result["selected"][0]["skill_id"] == "debugging"
+    assert result["authorization_granted"] is False
+
+
+def test_next_action_changes_strategy_without_authorizing(tmp_path: Path):
+    planner = _load_module("planner")
+    guard = FailureGuard(tmp_path / "guard.db")
+    action = planner.NextActionPlanner(guard)
+    target = {"name_path": "Foo"}
+    assert action.recommend(str(tmp_path), "find_symbol", target)["action"] == "INSPECT_CURRENT_EVIDENCE"
+    for _ in range(2):
+        guard.failure(str(tmp_path), "find_symbol", target, ValueError("absent"))
+    result = action.recommend(str(tmp_path), "find_symbol", target)
+    assert result["action"] == "CHANGE_STRATEGY"
+    assert result["authorization_granted"] is False
+    assert result["blocked_same_call"] is True

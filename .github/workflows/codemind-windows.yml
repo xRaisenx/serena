@@ -25,7 +25,7 @@ jobs:
       - name: Compile changed Python modules
         shell: pwsh
         run: |
-          python -m py_compile src/serena/mcp.py src/serena/codemind/learning.py src/serena/codemind/modules.py src/serena/tools/codemind_tools.py test/serena/test_codemind_guard.py
+          python -m py_compile src/serena/mcp.py src/serena/codemind/learning.py src/serena/codemind/modules.py src/serena/codemind/planner.py src/serena/tools/codemind_tools.py test/serena/test_codemind_guard.py
       - name: Install isolated test framework
         shell: pwsh
         run: python -m pip install pytest
