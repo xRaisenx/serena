@@ -179,3 +179,11 @@ footer span{padding:0 7px}
 .connection-actions .button:disabled,.config-form .button:disabled{opacity:.58;cursor:wait}
 .result-note{color:var(--muted);background:var(--panel2);padding:12px 13px;border-radius:9px;font-size:.8rem;min-height:42px}
 @media(max-width:650px){.config-form{grid-template-columns:1fr}.config-form button{width:100%}.connection-actions .button{flex:1 1 140px;white-space:normal}}
+
+/* Verified skill routing: exposed only after API v2 is present. */
+.route-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end;margin:16px 0}
+.route-form label{grid-column:1/-1;font-size:.82rem;font-weight:750}
+.route-form textarea{background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0;max-width:100%;resize:vertical;font:inherit;line-height:1.5}
+.route-form textarea:focus-visible{border-color:var(--accent)}
+.route-form button:disabled{opacity:.55;cursor:wait}
+@media(max-width:650px){.route-form{grid-template-columns:1fr}.route-form button{width:100%}#runtime-provenance{display:none}}
