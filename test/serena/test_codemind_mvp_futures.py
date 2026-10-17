@@ -10,7 +10,7 @@ from flask import Flask
 
 from serena.codemind.dashboard_api import register_codemind_routes
 from serena.codemind.futures import classify_intent, preview_actions
-from serena.codemind.methods import load_method_catalog
+from serena.codemind.methods import load_method_catalog, recommend_method_references
 
 _AUTH = {"Authorization": "Bearer " + "f" * 40}
 
@@ -164,3 +164,33 @@ def test_preview_does_not_echo_user_prompt_or_secrets(client):
 
 def test_post_cannot_mutate_method_catalog(client):
     assert client.post("/codemind/api/v2/methods", headers=_AUTH, json={}).status_code == 405
+
+
+
+def test_recommendation_across_25_reference_methods():
+    data = recommend_method_references("deterministic debugging of recurring failures")
+    assert data["schema"] == 2
+    assert data["state"] == "REFERENCE_SELECTION_ONLY"
+    assert data["authorization_granted"] is False
+    assert data["loaded"] == []
+    assert data["executed"] == []
+    assert 1 <= len(data["selected_references"]) <= 3
+    assert all(x["state"] == "REFERENCE_ONLY" for x in data["selected_references"])
+    assert data["selected_references"][0]["id"] == "codemind-deterministic-debugging"
+
+
+def test_empty_catalog_matches_are_not_invented():
+    data = recommend_method_references("xyzzy unknown quux")
+    assert data["selected_references"] == []
+
+
+@pytest.mark.parametrize("text", ["", "x", "a" * 1001, None, 42])
+def test_recommendation_rejects_invalid_input(text):
+    with pytest.raises(ValueError):
+        recommend_method_references(text)
+
+
+@pytest.mark.parametrize("limit", [0, 6, True, 1.3])
+def test_recommendation_rejects_invalid_limit(limit):
+    with pytest.raises(ValueError):
+        recommend_method_references("debug errors", limit=limit)
