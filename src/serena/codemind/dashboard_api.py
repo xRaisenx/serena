@@ -15,8 +15,8 @@ from typing import Any
 import psutil
 from flask import Blueprint, abort, jsonify, redirect, request
 
-from serena.codemind.health import CommanderHealthProbe
 from serena.codemind.futures import preview_actions
+from serena.codemind.health import CommanderHealthProbe
 from serena.codemind.learning import FailureGuard
 from serena.codemind.methods import MethodCatalogError, load_method_catalog
 from serena.codemind.modules import SkillManifestRegistry
