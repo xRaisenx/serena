@@ -101,3 +101,25 @@ class CodemindNextActionTool(Tool):
             raise TypeError("arguments_json must be an object")
         action = NextActionPlanner(FailureGuard()).recommend(self.get_project_root(), tool_name, arguments)
         return json.dumps(action, sort_keys=True)
+
+class CodemindMethodCatalogTool(Tool, ToolMarkerDoesNotRequireActiveProject):
+    """Discover CODEMIND's 25 source-backed reference methods, not installed skills."""
+
+    def apply(self) -> str:
+        """List CODEMIND method references without loading methods or starting workers."""
+        from serena.codemind.methods import load_method_catalog
+
+        return json.dumps(load_method_catalog(), sort_keys=True)
+
+
+class CodemindForecastTool(Tool):
+    """Read-only conditional next-action and FU engineering preview."""
+
+    def apply(self, request: str) -> str:
+        """Preview the safest conditional engineering path without executing tools.
+
+        :param request: Engineering objective (3–1,000 characters).
+        """
+        from serena.codemind.futures import preview_actions
+
+        return json.dumps(preview_actions(request, project_name=Path(self.get_project_root()).name), sort_keys=True)
