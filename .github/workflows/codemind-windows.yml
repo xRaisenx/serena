@@ -30,7 +30,7 @@ jobs:
       - name: Compile changed Python modules
         shell: pwsh
         run: |
-          python -m py_compile src/serena/mcp.py src/serena/codemind/learning.py src/serena/codemind/modules.py src/serena/codemind/planner.py src/serena/codemind/health.py src/serena/codemind/tunnel_control.py src/serena/codemind/dashboard_api.py src/serena/codemind/read_model.py src/serena/codemind/futures.py src/serena/codemind/methods.py src/serena/dashboard.py src/serena/tools/codemind_tools.py test/serena/test_codemind_guard.py test/serena/test_codemind_health.py test/serena/test_codemind_registry.py test/serena/test_codemind_dashboard.py test/serena/test_codemind_v2.py test/serena/test_codemind_tunnel_control.py test/serena/test_codemind_mvp_futures.py test/serena/test_codemind_skill_pack.py
+          python -m py_compile src/serena/mcp.py src/serena/codemind/learning.py src/serena/codemind/modules.py src/serena/codemind/planner.py src/serena/codemind/health.py src/serena/codemind/tunnel_control.py src/serena/codemind/dashboard_api.py src/serena/codemind/read_model.py src/serena/codemind/futures.py src/serena/codemind/methods.py src/serena/dashboard.py src/serena/tools/codemind_tools.py test/serena/test_codemind_guard.py test/serena/test_codemind_guard_concurrency.py test/serena/test_codemind_health.py test/serena/test_codemind_registry.py test/serena/test_codemind_dashboard.py test/serena/test_codemind_v2.py test/serena/test_codemind_tunnel_control.py test/serena/test_codemind_mvp_futures.py test/serena/test_codemind_skill_pack.py
       - name: Install isolated test framework
         shell: pwsh
         run: python -m pip install pytest
@@ -38,7 +38,7 @@ jobs:
         shell: pwsh
         env:
           PYTHONPATH: src
-        run: python -m pytest --noconftest -q test/serena/test_codemind_guard.py test/serena/test_codemind_health.py test/serena/test_codemind_tunnel_control.py
+        run: python -m pytest --noconftest -q test/serena/test_codemind_guard.py test/serena/test_codemind_guard_concurrency.py test/serena/test_codemind_health.py test/serena/test_codemind_tunnel_control.py
       - uses: astral-sh/setup-uv@v5
       - name: Launcher preflight on Windows PowerShell 5.1
         shell: pwsh
