@@ -12,5 +12,7 @@ def test_codemind_tools_are_registered_by_serena() -> None:
         "codemind_commander_status",
         "codemind_skill_route",
         "codemind_next_action",
+        "codemind_method_catalog",
+        "codemind_forecast",
     }
     assert expected <= registered
