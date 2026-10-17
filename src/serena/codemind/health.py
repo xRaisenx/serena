@@ -7,13 +7,14 @@ Commander interoperability until the peer implements the attested contract.
 
 from __future__ import annotations
 
-import hmac
 import hashlib
+import hmac
 import json
 import secrets
 import time
 from dataclasses import dataclass
-from typing import Callable, Protocol
+from collections.abc import Callable
+from typing import Protocol
 from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 
