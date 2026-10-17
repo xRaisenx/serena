@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 import psutil
-from flask import Blueprint, abort, jsonify, make_response, redirect, request
+from flask import Blueprint, abort, jsonify, redirect, request
 
 from serena.codemind.health import CommanderHealthProbe
 from serena.codemind.learning import FailureGuard
