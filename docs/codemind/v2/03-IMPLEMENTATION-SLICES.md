@@ -175,10 +175,10 @@ S0 Baseline
 
 Parallelize read-only inspection, fixture design and **disjoint owned files** only. One author per resource, guarded source generation, no extra NMBV worktree, no cross-executor bypass.
 
-## First developer task (immediately executable when authorized)
+## First developer task (source implementation started; runtime acceptance pending)
 
-**S1-A: Lock API v1 and build a verified read-model adapter.** Owner inspects `dashboard_api.py` and `console.js`, adds a versioned read-only response with `observed_at`, `source_revision`, explicit availability states and test fixture; updates UI to consume only the real fields. No new worker/learning writer, no unrelated Commander or NMBV changes.
+**S1-A: Lock API v1 and build a verified read-model adapter.** In the current feature branch, a versioned read-model implementation and real skill-route form have been added and run through focused Windows CI. **Do not mark the full S1 closed** until the installed Windows process reports the new endpoints and all the page interactions below are exercised. Owner inspects `dashboard_api.py` and `console.js`, adds a versioned read-only response with `observed_at`, `source_revision`, explicit availability states and test fixture; updates UI to consume only the real fields. No new worker/learning writer, no unrelated Commander or NMBV changes.
 
 Red tests: missing version, null count, stale data, wrong auth, failure to initialize, wrong Commander peer, stale tunnel. Green after targeted code and Windows browser check. This is the lowest-risk complete vertical slice from the current codebase.
 
-**Closure definition:** completing this task is NOT completing the whole product; only S1-A may be labeled green with its own evidence.
+**Closure definition:** S1-A source/tests may be green at the CI revision, but its runtime/GUI verification remains an independent gate. Completing S1-A is NOT completing the whole product.
