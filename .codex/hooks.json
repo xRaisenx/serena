@@ -1,0 +1,142 @@
+{
+  "description": "CODEMIND bounded, project-scoped Codex lifecycle hooks (requires user trust; no global hook changes).",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .codex/hooks/codemind-hooks.cjs",
+            "commandWindows": "node D:\\DEV\\codemind-serena\\.codex\\hooks\\codemind-hooks.cjs",
+            "timeout": 5,
+            "additionalContextLimit": 700
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .codex/hooks/codemind-hooks.cjs",
+            "commandWindows": "node D:\\DEV\\codemind-serena\\.codex\\hooks\\codemind-hooks.cjs",
+            "timeout": 5,
+            "additionalContextLimit": 550
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .codex/hooks/codemind-hooks.cjs",
+            "commandWindows": "node D:\\DEV\\codemind-serena\\.codex\\hooks\\codemind-hooks.cjs",
+            "timeout": 5,
+            "additionalContextLimit": 350
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .codex/hooks/codemind-hooks.cjs",
+            "commandWindows": "node D:\\DEV\\codemind-serena\\.codex\\hooks\\codemind-hooks.cjs",
+            "timeout": 5,
+            "additionalContextLimit": 350
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .codex/hooks/codemind-hooks.cjs",
+            "commandWindows": "node D:\\DEV\\codemind-serena\\.codex\\hooks\\codemind-hooks.cjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .codex/hooks/codemind-hooks.cjs",
+            "commandWindows": "node D:\\DEV\\codemind-serena\\.codex\\hooks\\codemind-hooks.cjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .codex/hooks/codemind-hooks.cjs",
+            "commandWindows": "node D:\\DEV\\codemind-serena\\.codex\\hooks\\codemind-hooks.cjs",
+            "timeout": 5,
+            "additionalContextLimit": 350
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .codex/hooks/codemind-hooks.cjs",
+            "commandWindows": "node D:\\DEV\\codemind-serena\\.codex\\hooks\\codemind-hooks.cjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .codex/hooks/codemind-hooks.cjs",
+            "commandWindows": "node D:\\DEV\\codemind-serena\\.codex\\hooks\\codemind-hooks.cjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .codex/hooks/codemind-hooks.cjs",
+            "commandWindows": "node D:\\DEV\\codemind-serena\\.codex\\hooks\\codemind-hooks.cjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .codex/hooks/codemind-hooks.cjs",
+            "commandWindows": "node D:\\DEV\\codemind-serena\\.codex\\hooks\\codemind-hooks.cjs",
+            "timeout": 3
+          }
+        ]
+      }
+    ]
+  }
+}
