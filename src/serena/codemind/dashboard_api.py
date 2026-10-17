@@ -16,7 +16,9 @@ import psutil
 from flask import Blueprint, abort, jsonify, redirect, request
 
 from serena.codemind.health import CommanderHealthProbe
+from serena.codemind.futures import preview_actions
 from serena.codemind.learning import FailureGuard
+from serena.codemind.methods import MethodCatalogError, load_method_catalog
 from serena.codemind.modules import SkillManifestRegistry
 from serena.codemind.planner import SkillRouter
 from serena.codemind.read_model import build_v2_overview
@@ -308,6 +310,39 @@ def register_codemind_routes(app: Any, agent: Any, tool_names: list[str], tool_u
                 "authorization_granted": False,
             }
         )
+
+    @bp.get("/v2/methods")
+    def methods_v2() -> Any:
+        """Reference catalog; these methods are NOT installed or executing workers."""
+        try:
+            return jsonify(load_method_catalog())
+        except MethodCatalogError:
+            return jsonify({"schema": 2, "state": "UNAVAILABLE", "count": None, "methods": []}), 503
+
+    @bp.get("/v2/actions/next")
+    def next_action_v2() -> Any:
+        # Serena's dashboard is not a task-authorization service. The
+        # active project alone cannot prove a bound task/owning actor.
+        return jsonify({
+            "schema": 2, "state": "TASK_SESSION_UNBOUND",
+            "canonical": None, "authorization_granted": False,
+            "reason": "Bind an actual host task and verified owner before canonical execution",
+        }), 409
+
+    @bp.post("/v2/actions/preview")
+    def preview_actions_v2() -> Any:
+        """Deterministic non-executable advisory forecast for a scoped request."""
+        require_same_origin()
+        body = request.get_json(silent=True)
+        if not isinstance(body, dict) or set(body) != {"request_text"}:
+            abort(400)
+        task = body["request_text"]
+        if not isinstance(task, str) or not (3 <= len(task.strip()) <= 1000):
+            abort(400)
+        project, project_status = project_info()
+        # Do not infer a task/session binding from an activated project.
+        result = preview_actions(task, project_name=project_status["name"] if project is not None else None)
+        return jsonify(result)
 
     app.register_blueprint(bp, url_prefix="/codemind/api")
 
