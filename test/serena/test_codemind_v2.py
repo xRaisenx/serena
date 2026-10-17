@@ -116,7 +116,8 @@ def test_discovery_failure_is_unknown_not_no_tools(monkeypatch, tmp_path):
 def test_capabilities_never_mark_fu_or_experts_implemented(client):
     data = client.get("/codemind/api/v2/capabilities", headers=_TOKEN).get_json()
     assert data["schema"] == 2
-    assert data["capabilities"]["fu_20_candidate_horizon"] == "NOT_IMPLEMENTED"
+    assert data["capabilities"]["fu_20_candidate_horizon"] == "AVAILABLE_ADVISORY"
+    assert data["capabilities"]["method_reference_catalog"] == "AVAILABLE_REFERENCE_ONLY"
     assert data["capabilities"]["codemind_100_expert_runtime"] == "NOT_IMPLEMENTED"
     assert data["capabilities"]["commander_dual_watchdog"] == "UNVERIFIED"
 
