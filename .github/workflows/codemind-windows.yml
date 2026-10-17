@@ -41,3 +41,6 @@ jobs:
       - name: Run Serena MCP registration and tool dispatch integration tests
         shell: pwsh
         run: uv run --no-sync python -m pytest -q test/serena/test_codemind_registry.py test/serena/test_mcp.py
+      - name: Verify real subprocess MCP handshake tool discovery and call
+        shell: pwsh
+        run: uv run --no-sync python -m pytest -q test/serena/test_codemind_stdio.py
