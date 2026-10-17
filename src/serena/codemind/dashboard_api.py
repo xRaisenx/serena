@@ -3,6 +3,7 @@
 
 No process mutation, shell execution, token persistence or remote health bypass.
 """
+
 from __future__ import annotations
 
 import hmac
@@ -59,10 +60,10 @@ def register_codemind_routes(app: Any, agent: Any, tool_names: list[str], tool_u
             directory = Path(project.project_root) / ".codemind" / "skills"
             items = SkillManifestRegistry(directory).list_skills()
             # Do not send instruction bodies or local filesystem details to the browser.
-            return {"state": "available", "items": [
-                {"id": skill["id"], "description": skill["description"], "version": skill["version"]}
-                for skill in items
-            ]}
+            return {
+                "state": "available",
+                "items": [{"id": skill["id"], "description": skill["description"], "version": skill["version"]} for skill in items],
+            }
         except (ValueError, TypeError, OSError):
             return {"state": "validation_failed", "items": []}
 
@@ -81,11 +82,14 @@ def register_codemind_routes(app: Any, agent: Any, tool_names: list[str], tool_u
         try:
             items = []
             for task in list(agent.get_current_tasks())[:80]:
-                items.append({
-                    "id": task.task_id, "name": str(task.name)[:120],
-                    "running": bool(task.is_running),
-                    "finished_successfully": bool(task.finished_successfully()),
-                })
+                items.append(
+                    {
+                        "id": task.task_id,
+                        "name": str(task.name)[:120],
+                        "running": bool(task.is_running),
+                        "finished_successfully": bool(task.finished_successfully()),
+                    }
+                )
             return {"state": "available", "items": items}
         except Exception:
             return {"state": "unavailable", "items": []}
@@ -99,8 +103,11 @@ def register_codemind_routes(app: Any, agent: Any, tool_names: list[str], tool_u
         except (OSError, psutil.Error):
             pass
         result: dict[str, Any] = {
-            "processes": processes, "peer_status": "not_configured", "authenticated": False,
-            "ready": False, "process_is_health_proof": False,
+            "processes": processes,
+            "peer_status": "not_configured",
+            "authenticated": False,
+            "ready": False,
+            "process_is_health_proof": False,
         }
         url, token = os.getenv("CODEMIND_COMMANDER_HEALTH_URL"), os.getenv("CODEMIND_COMMANDER_HEALTH_TOKEN")
         if url and token:
@@ -133,11 +140,16 @@ def register_codemind_routes(app: Any, agent: Any, tool_names: list[str], tool_u
         except Exception:
             stats = {}
         payload = {
-            "schema": 1, "application": "CODEMIND Serena", "serena_version": version,
-            "context": mode, "project": project_status,
+            "schema": 1,
+            "application": "CODEMIND Serena",
+            "serena_version": version,
+            "context": mode,
+            "project": project_status,
             "tools": {"registered_count": len(tool_names), "active_count": len(active_names), "active": sorted(active_names)},
-            "skills": inspect_skills(project), "learning": inspect_learning(),
-            "tasks": inspect_tasks(), "commander": inspect_commander(),
+            "skills": inspect_skills(project),
+            "learning": inspect_learning(),
+            "tasks": inspect_tasks(),
+            "commander": inspect_commander(),
             "usage": {"state": "available" if tool_usage_stats else "not_configured", "stats": stats},
             "tunnel": {
                 "id": os.getenv("CODEMIND_TUNNEL_ID") or None,
