@@ -65,7 +65,12 @@ class QueryProjectTool(Tool, ToolMarkerOptional, ToolMarkerDoesNotRequireActiveP
                 raise ValueError(f"Project {project_name} is not registered and cannot be queried.")
             project = registered_project.get_project_instance(self.agent.serena_config)
             with tool.agent.active_project_context(project):
-                return tool.apply(**json.loads(tool_params_json))
+                # Tool implementations are dynamically registered subclasses; the
+                # base Tool class does not declare an apply method.
+                apply = getattr(tool, "apply", None)
+                if not callable(apply):
+                    raise ValueError(f"Tool {tool_name} has no callable project query implementation.")
+                return apply(**json.loads(tool_params_json))
 
     def _is_project_server_required(self, tool: Tool) -> bool:
         # The project server is relevant to the LSP backend only
