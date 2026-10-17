@@ -59,9 +59,17 @@ if ($CheckOnly) {
 Write-Host 'CODEMIND Serena: Starting one local MCP process. No Commander restart will occur.'
 Write-Host 'The dashboard URL is reported by Serena startup logs. The MCP endpoint port is not the dashboard port.'
 Push-Location $repositoryRoot
+$previousErrorActionPreference = $ErrorActionPreference
 try {
+    # PowerShell 5.1 emits native stderr as a NativeCommandError record.
+    # uv writes routine build and progress messages to stderr, even on success.
+    # Treat native stderr as visible diagnostic output, not a terminating PS error.
+    # The native exit code remains authoritative and is checked immediately.
+    $ErrorActionPreference = 'Continue'
     & $uv.Source run --locked --no-dev serena start-mcp-server --transport streamable-http --host 127.0.0.1 --port $McpPort --agent-interface tools --enable-web-dashboard true --open-web-dashboard false --project $ProjectPath
-    if ($LASTEXITCODE -ne 0) { throw ('Serena exited with code ' + $LASTEXITCODE) }
+    $serenaExitCode = $LASTEXITCODE
 } finally {
+    $ErrorActionPreference = $previousErrorActionPreference
     Pop-Location
 }
+if ($serenaExitCode -ne 0) { throw ('Serena exited with code ' + $serenaExitCode) }
