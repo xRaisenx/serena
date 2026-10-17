@@ -18,6 +18,7 @@ from flask import Blueprint, abort, jsonify, redirect, request
 from serena.codemind.health import CommanderHealthProbe
 from serena.codemind.learning import FailureGuard
 from serena.codemind.modules import SkillManifestRegistry
+from serena.codemind.tunnel_control import TunnelControlError, controller as tunnel_controller
 
 
 def register_codemind_routes(app: Any, agent: Any, tool_names: list[str], tool_usage_stats: Any = None) -> None:
@@ -120,6 +121,73 @@ def register_codemind_routes(app: Any, agent: Any, tool_names: list[str], tool_u
             result["peer_status"] = "incomplete_configuration"
         return result
 
+    def require_same_origin() -> None:
+        # A bearer token is still required by the blueprint guard.
+        # Cross-origin browser POST requests must never mutate tunnel state.
+        from urllib.parse import urlsplit
+
+        origin = request.headers.get("Origin", "")
+        if origin:
+            parts = urlsplit(origin)
+            if parts.scheme != "http" or parts.netloc != request.host:
+                abort(403)
+        if request.headers.get("Sec-Fetch-Site", "same-origin") not in ("same-origin", "none"):
+            abort(403)
+        if request.content_length is not None and request.content_length > 1024:
+            abort(413)
+
+    @bp.get("/tunnel/status")
+    def tunnel_status() -> Any:
+        return jsonify(tunnel_controller.status())
+
+    @bp.post("/tunnel/key")
+    def tunnel_set_key() -> Any:
+        require_same_origin()
+        body = request.get_json(silent=True)
+        if not isinstance(body, dict) or set(body) != {"api_key"}:
+            abort(400)
+        try:
+            tunnel_controller.save_key(body["api_key"])
+        except TunnelControlError as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
+        return jsonify({"ok": True, "key_configured": True})
+
+    @bp.delete("/tunnel/key")
+    def tunnel_delete_key() -> Any:
+        require_same_origin()
+        try:
+            tunnel_controller.remove_key()
+        except TunnelControlError as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 409
+        return jsonify({"ok": True, "key_configured": False})
+
+    @bp.post("/tunnel/doctor")
+    def tunnel_doctor() -> Any:
+        require_same_origin()
+        try:
+            result = tunnel_controller.doctor()
+        except TunnelControlError as exc:
+            return jsonify({"passed": False, "message": str(exc)}), 409
+        return jsonify(result), 200 if result["passed"] else 409
+
+    @bp.post("/tunnel/start")
+    def tunnel_start() -> Any:
+        require_same_origin()
+        try:
+            status = tunnel_controller.start()
+        except TunnelControlError as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 409
+        return jsonify({"ok": True, "tunnel": status}), 200
+
+    @bp.post("/tunnel/stop")
+    def tunnel_stop() -> Any:
+        require_same_origin()
+        try:
+            status = tunnel_controller.stop()
+        except TunnelControlError as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 409
+        return jsonify({"ok": True, "tunnel": status}), 200
+
     @bp.get("/overview")
     def overview() -> Any:
         project, project_status = project_info()
@@ -139,6 +207,7 @@ def register_codemind_routes(app: Any, agent: Any, tool_names: list[str], tool_u
             stats = tool_usage_stats.get_tool_stats_dict() if tool_usage_stats else {}
         except Exception:
             stats = {}
+        tunnel_status = tunnel_controller.status()
         payload = {
             "schema": 1,
             "application": "CODEMIND Serena",
@@ -152,16 +221,21 @@ def register_codemind_routes(app: Any, agent: Any, tool_names: list[str], tool_u
             "commander": inspect_commander(),
             "usage": {"state": "available" if tool_usage_stats else "not_configured", "stats": stats},
             "tunnel": {
-                "id": os.getenv("CODEMIND_TUNNEL_ID") or None,
-                "state": "configured_unverified" if os.getenv("CODEMIND_TUNNEL_ID") else "not_configured",
+                "id": os.getenv("CODEMIND_TUNNEL_ID") or tunnel_status["id"],
+                "state": "client_ready_unverified" if tunnel_status["client_ready"] else "configured_unverified",
                 "connection_verified": False,
+                "key_configured": tunnel_status["key_configured"],
+                "managed_process_running": tunnel_status["managed_process_running"],
+                "client_ready": tunnel_status["client_ready"],
+                "health": tunnel_status["health"],
+                "profile": tunnel_status["profile"],
             },
             "integrations": {
                 "nmbv_bot": "not_verified",
                 "supervisor": "not_verified",
                 "client_connection": "not_verified",
             },
-            "security": {"operator_authenticated": True, "write_actions_enabled": False},
+            "security": {"operator_authenticated": True, "write_actions_enabled": False, "tunnel_settings_enabled": True},
         }
         return jsonify(payload)
 
