@@ -1,14 +1,13 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Unit tests for secure tunnel credential storage and service ownership."""
+
 from __future__ import annotations
 
 import importlib.util
-import os
 import subprocess
 import sys
 from pathlib import Path
 from types import SimpleNamespace
-from urllib.error import URLError
 
 import pytest
 
@@ -28,6 +27,7 @@ def ctl(tmp_path, monkeypatch):
         # Reversible deterministic stand-in; the plaintext must not remain
         # directly visible in the persisted bytes. Real DPAPI is Windows-only.
         return bytes(value ^ 0xA5 for value in data)
+
     monkeypatch.setattr(MODULE, "_dpapi", fake_dpapi)
     exe = tmp_path / "tunnel-client.exe"
     exe.write_bytes(b"dummy")
@@ -73,12 +73,14 @@ def test_missing_key_blocks_doctor(ctl):
 def test_doctor_never_logs_or_returns_secret(ctl, monkeypatch):
     key = "sk-proj-" + "a" * 50
     ctl.save_key(key)
+
     def fake_run(args, env, stdout, stderr, timeout, check):
         assert key == env["CONTROL_PLANE_API_KEY"]
         assert key not in repr(args)
         assert stdout == subprocess.DEVNULL
         assert stderr == subprocess.DEVNULL
         return SimpleNamespace(returncode=0)
+
     monkeypatch.setattr(MODULE.subprocess, "run", fake_run)
     result = ctl.doctor()
     assert result["passed"] is True
@@ -93,8 +95,10 @@ def test_nonzero_doctor_is_not_pass(ctl, monkeypatch):
 
 def test_timeout_is_not_pass(ctl, monkeypatch):
     ctl.save_key("sk-proj-" + "a" * 50)
+
     def timeout(*a, **k):
         raise subprocess.TimeoutExpired(cmd="doctor", timeout=30)
+
     monkeypatch.setattr(MODULE.subprocess, "run", timeout)
     assert ctl.doctor()["passed"] is False
 
@@ -110,15 +114,20 @@ def test_start_status_stop_only_owned_child(ctl, monkeypatch):
     ctl.save_key("sk-proj-" + "a" * 50)
     monkeypatch.setattr(ctl, "doctor", lambda: {"passed": True})
     observed = {}
+
     class FakeProc:
         def __init__(self):
             self.stopped = False
+
         def poll(self):
             return 0 if self.stopped else None
+
         def terminate(self):
             self.stopped = True
+
         def wait(self, timeout):
             assert timeout == 5
+
     def spawn(args, env, stdin, stdout, stderr, creationflags):
         assert args[1:4] == ["run", "--profile", MODULE.PROFILE]
         assert env["CONTROL_PLANE_API_KEY"].startswith("sk-proj-")
@@ -126,6 +135,7 @@ def test_start_status_stop_only_owned_child(ctl, monkeypatch):
         assert stderr == subprocess.DEVNULL
         observed["proc"] = FakeProc()
         return observed["proc"]
+
     monkeypatch.setattr(MODULE.subprocess, "Popen", spawn)
     assert ctl.start()["managed_process_running"] is True
     assert ctl.stop()["managed_process_running"] is False

@@ -18,7 +18,8 @@ from flask import Blueprint, abort, jsonify, redirect, request
 from serena.codemind.health import CommanderHealthProbe
 from serena.codemind.learning import FailureGuard
 from serena.codemind.modules import SkillManifestRegistry
-from serena.codemind.tunnel_control import TunnelControlError, controller as tunnel_controller
+from serena.codemind.tunnel_control import TunnelControlError
+from serena.codemind.tunnel_control import controller as tunnel_controller
 
 
 def register_codemind_routes(app: Any, agent: Any, tool_names: list[str], tool_usage_stats: Any = None) -> None:

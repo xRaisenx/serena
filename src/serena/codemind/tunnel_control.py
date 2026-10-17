@@ -4,10 +4,10 @@
 No API key is returned through HTTP, CLI arguments, logging, or diagnostics.
 The tunnel remains a distinct process and is never interpreted as ChatGPT app acceptance.
 """
+
 from __future__ import annotations
 
 import ctypes
-import json
 import os
 import re
 import subprocess
@@ -38,10 +38,19 @@ def _dpapi(data: bytes, *, decrypt: bool) -> bytes:
     crypt32 = ctypes.WinDLL("crypt32", use_last_error=True)
     kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
     crypt = crypt32.CryptUnprotectData if decrypt else crypt32.CryptProtectData
-    crypt.argtypes = [ctypes.POINTER(_Blob), ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p,
-                      ctypes.c_void_p, wintypes.DWORD, ctypes.POINTER(_Blob)] if decrypt else [
-        ctypes.POINTER(_Blob), wintypes.LPCWSTR, ctypes.c_void_p, ctypes.c_void_p,
-        ctypes.c_void_p, wintypes.DWORD, ctypes.POINTER(_Blob)]
+    crypt.argtypes = (
+        [ctypes.POINTER(_Blob), ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, wintypes.DWORD, ctypes.POINTER(_Blob)]
+        if decrypt
+        else [
+            ctypes.POINTER(_Blob),
+            wintypes.LPCWSTR,
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+            wintypes.DWORD,
+            ctypes.POINTER(_Blob),
+        ]
+    )
     crypt.restype = wintypes.BOOL
     kernel32.LocalFree.argtypes = [ctypes.c_void_p]
     kernel32.LocalFree.restype = ctypes.c_void_p
@@ -114,11 +123,19 @@ class TunnelController:
         try:
             result = subprocess.run(
                 [str(self._binary), "doctor", "--profile", PROFILE, "--explain"],
-                env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                timeout=30, check=False,
+                env=env,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=30,
+                check=False,
             )
-            return {"passed": result.returncode == 0, "exit_code": result.returncode,
-                    "message": "Tunnel diagnostics passed" if result.returncode == 0 else "Tunnel diagnostics failed; verify key role, tunnel association and local MCP"}
+            return {
+                "passed": result.returncode == 0,
+                "exit_code": result.returncode,
+                "message": "Tunnel diagnostics passed"
+                if result.returncode == 0
+                else "Tunnel diagnostics failed; verify key role, tunnel association and local MCP",
+            }
         except subprocess.TimeoutExpired:
             return {"passed": False, "exit_code": None, "message": "Tunnel diagnostics timed out"}
         except OSError:
@@ -170,12 +187,20 @@ class TunnelController:
             try:
                 self._process = subprocess.Popen(
                     [
-                        str(self._binary), "run", "--profile", PROFILE,
-                        "--health.listen-addr", "127.0.0.1:0",
-                        "--health.url-file", str(self._health_url_file),
+                        str(self._binary),
+                        "run",
+                        "--profile",
+                        PROFILE,
+                        "--health.listen-addr",
+                        "127.0.0.1:0",
+                        "--health.url-file",
+                        str(self._health_url_file),
                     ],
-                    env=env, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL, creationflags=flags,
+                    env=env,
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    creationflags=flags,
                 )
             except OSError as exc:
                 raise TunnelControlError("Could not launch the tunnel client") from exc
