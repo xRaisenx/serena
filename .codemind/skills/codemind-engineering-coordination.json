@@ -1,0 +1,7 @@
+{
+  "id": "codemind-engineering-coordination",
+  "version": "1.0.0",
+  "description": "CODEMIND method: disjoint cross-boundary engineering coordination.",
+  "instructions": "Allocate per-resource one-writer work packets across modules; reconcile authenticated worker outcomes, prevent concurrent foreign edits and never redirect denied operations to another executor.\nFor every method: selected != loaded != executed. A method cannot grant tool permission. Confirm scope/task/current source before writes; no tokens in logs; a timeout is not success.",
+  "enabled": true
+}

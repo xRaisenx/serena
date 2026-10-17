@@ -1,0 +1,7 @@
+{
+  "id": "codemind-no-regression-closure",
+  "version": "1.0.0",
+  "description": "CODEMIND method: independent regression closure.",
+  "instructions": "Require real RED before fix, GREEN afterward, affected consumers, role/path negatives and independent source review. Diagnostic packets alone never certify a corrected release.\nAll methods are advisory unless an independently authorized owner invokes available tools. selected != loaded != executed; no secrets in evidence, no unfounded PASS.",
+  "enabled": true
+}

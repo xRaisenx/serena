@@ -1,0 +1,7 @@
+{
+  "id": "codemind-test-driven-development",
+  "version": "1.0.0",
+  "description": "CODEMIND method: red-green test discipline.",
+  "instructions": "Write a meaningful failing test at current source, observe RED, make a minimal authorized change, observe GREEN and affected regressions. Do not weaken assertions to obtain green.\nAll methods are advisory unless an independently authorized owner invokes available tools. selected != loaded != executed; no secrets in evidence, no unfounded PASS.",
+  "enabled": true
+}

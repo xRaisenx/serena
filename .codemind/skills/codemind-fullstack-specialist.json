@@ -1,0 +1,7 @@
+{
+  "id": "codemind-fullstack-specialist",
+  "version": "1.0.0",
+  "description": "CODEMIND method: general frontend/backend/DB technical specialization.",
+  "instructions": "Trace frontend interactions through API authentication, validation, database, offline/retry behavior and downstream consumers. Preserve migrations and role boundaries, verifying happy and negative cases.\nAll methods are advisory unless an independently authorized owner invokes available tools. selected != loaded != executed; no secrets in evidence, no unfounded PASS.",
+  "enabled": true
+}

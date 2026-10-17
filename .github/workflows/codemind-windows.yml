@@ -30,7 +30,7 @@ jobs:
       - name: Compile changed Python modules
         shell: pwsh
         run: |
-          python -m py_compile src/serena/mcp.py src/serena/codemind/learning.py src/serena/codemind/modules.py src/serena/codemind/planner.py src/serena/codemind/health.py src/serena/codemind/tunnel_control.py src/serena/codemind/dashboard_api.py src/serena/codemind/read_model.py src/serena/codemind/futures.py src/serena/codemind/methods.py src/serena/dashboard.py src/serena/tools/codemind_tools.py test/serena/test_codemind_guard.py test/serena/test_codemind_health.py test/serena/test_codemind_registry.py test/serena/test_codemind_dashboard.py test/serena/test_codemind_v2.py test/serena/test_codemind_tunnel_control.py test/serena/test_codemind_mvp_futures.py
+          python -m py_compile src/serena/mcp.py src/serena/codemind/learning.py src/serena/codemind/modules.py src/serena/codemind/planner.py src/serena/codemind/health.py src/serena/codemind/tunnel_control.py src/serena/codemind/dashboard_api.py src/serena/codemind/read_model.py src/serena/codemind/futures.py src/serena/codemind/methods.py src/serena/dashboard.py src/serena/tools/codemind_tools.py test/serena/test_codemind_guard.py test/serena/test_codemind_health.py test/serena/test_codemind_registry.py test/serena/test_codemind_dashboard.py test/serena/test_codemind_v2.py test/serena/test_codemind_tunnel_control.py test/serena/test_codemind_mvp_futures.py test/serena/test_codemind_skill_pack.py
       - name: Install isolated test framework
         shell: pwsh
         run: python -m pip install pytest
@@ -57,7 +57,7 @@ jobs:
         run: uv sync --extra dev --locked
       - name: Run Serena MCP registration and tool dispatch integration tests
         shell: pwsh
-        run: uv run --no-sync python -m pytest -q test/serena/test_codemind_registry.py test/serena/test_codemind_dashboard.py test/serena/test_codemind_v2.py test/serena/test_codemind_mvp_futures.py test/serena/test_mcp.py
+        run: uv run --no-sync python -m pytest -q test/serena/test_codemind_registry.py test/serena/test_codemind_dashboard.py test/serena/test_codemind_v2.py test/serena/test_codemind_mvp_futures.py test/serena/test_codemind_skill_pack.py test/serena/test_mcp.py
       - name: Verify real subprocess MCP handshake tool discovery and call
         shell: pwsh
         run: uv run --no-sync python -m pytest -q test/serena/test_codemind_stdio.py

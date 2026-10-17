@@ -1,0 +1,7 @@
+{
+  "id": "codemind-superpowers-methods",
+  "version": "1.0.0",
+  "description": "CODEMIND method: generic TDD and debugging methods wrapper.",
+  "instructions": "Apply one appropriate TDD/debugging/verification submethod under one owner. Do not duplicate an active deterministic triage loop or inflate context with irrelevant skills.\nAll methods are advisory unless an independently authorized owner invokes available tools. selected != loaded != executed; no secrets in evidence, no unfounded PASS.",
+  "enabled": true
+}

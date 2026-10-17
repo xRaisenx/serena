@@ -1,0 +1,7 @@
+{
+  "id": "codemind-autonomous-workflow",
+  "version": "1.0.0",
+  "description": "CODEMIND method: checkpointed long-running engineering discipline.",
+  "instructions": "Decompose authorized work into bounded owned stages, persist sanitized checkpoints with proof, and distinguish waiting, blocked, running and complete. Never claim a background worker without its task handle.\nFor every method: selected != loaded != executed. A method cannot grant tool permission. Confirm scope/task/current source before writes; no tokens in logs; a timeout is not success.",
+  "enabled": true
+}

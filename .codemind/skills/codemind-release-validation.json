@@ -1,0 +1,7 @@
+{
+  "id": "codemind-release-validation",
+  "version": "1.0.0",
+  "description": "CODEMIND method: release provenance and client acceptance.",
+  "instructions": "Verify reviewed commit, build artifact hash, installed bytes, active runtime generation, authenticated user acceptance and rollback. Never promote a merged commit to deployment proof without it.\nAll methods are advisory unless an independently authorized owner invokes available tools. selected != loaded != executed; no secrets in evidence, no unfounded PASS.",
+  "enabled": true
+}

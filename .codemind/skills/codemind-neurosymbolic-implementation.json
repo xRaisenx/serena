@@ -1,0 +1,7 @@
+{
+  "id": "codemind-neurosymbolic-implementation",
+  "version": "1.0.0",
+  "description": "CODEMIND method: Serena symbol-first constrained coding.",
+  "instructions": "Use Serena symbols, callers, invariants and source fingerprints to localize owner, add a meaningful red test, perform minimal authorized CAS/JIT editing, then diagnostics and focused proof.\nFor every method: selected != loaded != executed. A method cannot grant tool permission. Confirm scope/task/current source before writes; no tokens in logs; a timeout is not success.",
+  "enabled": true
+}

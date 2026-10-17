@@ -1,0 +1,7 @@
+{
+  "id": "codemind-guarded-git-delivery",
+  "version": "1.0.0",
+  "description": "CODEMIND method: protected Git delivery and source revision checking.",
+  "instructions": "Inspect exact owned diff and protected ref, preserve unrelated dirty work, record fresh tests and expected HEAD, review and commit without force. Distinguish merge SHA from running production.\nFor every method: selected != loaded != executed. A method cannot grant tool permission. Confirm scope/task/current source before writes; no tokens in logs; a timeout is not success.",
+  "enabled": true
+}

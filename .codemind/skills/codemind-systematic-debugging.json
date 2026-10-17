@@ -1,0 +1,7 @@
+{
+  "id": "codemind-systematic-debugging",
+  "version": "1.0.0",
+  "description": "CODEMIND method: minimal causal root-cause falsification.",
+  "instructions": "Observe exact failure, reduce to minimal reproducer, localize the owning path, form competing causal hypotheses and run the cheapest falsifier first, not a speculative edit.\nAll methods are advisory unless an independently authorized owner invokes available tools. selected != loaded != executed; no secrets in evidence, no unfounded PASS.",
+  "enabled": true
+}

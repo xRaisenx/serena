@@ -1,0 +1,7 @@
+{
+  "id": "codemind-stark-methods",
+  "version": "1.0.0",
+  "description": "CODEMIND method: architecture/spec adapter.",
+  "instructions": "Select only needed architecture and requirements submethods; avoid duplicate parent/child agent execution, broad ceremony and unsupported architectural assumptions.\nAll methods are advisory unless an independently authorized owner invokes available tools. selected != loaded != executed; no secrets in evidence, no unfounded PASS.",
+  "enabled": true
+}
