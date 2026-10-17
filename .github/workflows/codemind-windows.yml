@@ -66,6 +66,7 @@ jobs:
         run: |
           node --check .codex/hooks/codemind-hooks.cjs
           node --test test/serena/test_codemind_hooks.cjs
+          node --test test/serena/test_codemind_method_badges.cjs
       - name: Check Codex project hook registry JSON
         shell: pwsh
         run: |
