@@ -33,4 +33,4 @@ jobs:
         shell: pwsh
         env:
           PYTHONPATH: src
-        run: python -m pytest -q test/serena/test_codemind_guard.py
+        run: python -m pytest --noconftest -q test/serena/test_codemind_guard.py
