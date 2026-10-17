@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "scope": "DESIGN_CONTRACT_NOT_RUNTIME_DATA",
   "ownership": {
     "frontend": "src/serena/resources/dashboard/codemind/",
@@ -44,9 +44,10 @@
       "id": "skills",
       "label": "Skills and routing",
       "source": "/codemind/api/overview#skills.items",
-      "state": "V1_READ_ONLY",
+      "state": "V2_SOURCE_ROUTING_IMPLEMENTED__RUNTIME_UNVERIFIED",
       "actions": [
-        "browse_skills"
+        "browse_skills",
+        "skill_route"
       ]
     },
     {
@@ -230,6 +231,40 @@
         "409 process not stopped",
         "timeout"
       ]
+    },
+    {
+      "id": "skill_route",
+      "ui": "#skill-route-form",
+      "verb": "POST",
+      "endpoint": "/codemind/api/v2/skills/route",
+      "auth": "operator+same_origin",
+      "ui_failure": [
+        "401 auth",
+        "403 CSRF",
+        "400 invalid request",
+        "409 inactive project",
+        "413 oversized body",
+        "422 bad skill manifest",
+        "timeout"
+      ],
+      "data_policy": "selection-only; selected != loaded != executed; never grant permission",
+      "source_implemented": true,
+      "runtime_verified": false
+    },
+    {
+      "id": "read_v2_evidence",
+      "ui": "#runtime-provenance",
+      "verb": "GET",
+      "endpoint": "/codemind/api/v2/overview",
+      "auth": "operator",
+      "ui_failure": [
+        "401 auth",
+        "404 old server",
+        "timeout"
+      ],
+      "data_policy": "unknown/null never treated as success",
+      "source_implemented": true,
+      "runtime_verified": false
     }
   ],
   "status_field_rules": [
@@ -280,6 +315,32 @@
       "prohibits": [
         "poll ready => ChatGPT tool_call verified"
       ]
+    }
+  ],
+  "v2_source_contracts": [
+    {
+      "endpoint": "GET /codemind/api/v2/overview",
+      "implemented_in": "src/serena/codemind/dashboard_api.py",
+      "model": "src/serena/codemind/read_model.py",
+      "tests": "test/serena/test_codemind_v2.py",
+      "runner_verified": true,
+      "runtime_verified": false
+    },
+    {
+      "endpoint": "GET /codemind/api/v2/capabilities",
+      "implemented_in": "src/serena/codemind/dashboard_api.py",
+      "model": "src/serena/codemind/read_model.py",
+      "tests": "test/serena/test_codemind_v2.py",
+      "runner_verified": true,
+      "runtime_verified": false
+    },
+    {
+      "endpoint": "POST /codemind/api/v2/skills/route",
+      "implemented_in": "src/serena/codemind/dashboard_api.py",
+      "model": "src/serena/codemind/planner.py",
+      "tests": "test/serena/test_codemind_v2.py",
+      "runner_verified": true,
+      "runtime_verified": false
     }
   ]
 }
