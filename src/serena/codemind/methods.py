@@ -61,3 +61,38 @@ def load_method_catalog() -> dict[str, Any]:
         "source": "CODEMIND reference taxonomy mapped from NMBV PR #636",
         "methods": safe,
     }
+
+
+def recommend_method_references(request_text: str, *, limit: int = 3) -> dict[str, Any]:
+    """Deterministic reference suggestions; no skill body is loaded or invoked."""
+    import re
+
+    if not isinstance(request_text, str) or not (3 <= len(request_text.strip()) <= 1000):
+        raise ValueError("Request text must have 3 to 1000 characters")
+    if type(limit) is not int or not (1 <= limit <= 5):
+        raise ValueError("Unsupported recommendation limit")
+    tokens = set(re.findall(r"[a-z][a-z0-9]*", request_text.lower()))
+    stop = {"the", "and", "for", "with", "into", "about", "that", "this", "your", "from"}
+    tokens.difference_update(stop)
+    scored: list[tuple[int, str, dict[str, Any]]] = []
+    for method in load_method_catalog()["methods"]:
+        meta = " ".join([method["id"].replace("-", " "), method["source_name"].replace("-", " "), method["description"]])
+        matches = tokens.intersection(re.findall(r"[a-z][a-z0-9]*", meta.lower()))
+        score = len(matches)
+        if method["source_name"].lower().replace("-", " ") in request_text.lower():
+            score += 3
+        if score:
+            scored.append((score, method["id"], method))
+    scored.sort(key=lambda item: (-item[0], item[1]))
+    return {
+        "schema": 2,
+        "state": "REFERENCE_SELECTION_ONLY",
+        "algorithm": "deterministic_metadata_overlap",
+        "selected_references": [
+            {"id": method["id"], "source_name": method["source_name"], "score": score, "state": "REFERENCE_ONLY"}
+            for score, _, method in scored[:limit]
+        ],
+        "loaded": [],
+        "executed": [],
+        "authorization_granted": False,
+    }
