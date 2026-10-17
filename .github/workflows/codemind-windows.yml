@@ -6,7 +6,7 @@ on:
       - "src/serena/codemind/**"
       - "src/serena/mcp.py"
       - "src/serena/tools/codemind_tools.py"
-      - "test/serena/test_codemind_guard.py"
+      - "test/serena/test_codemind_*.py"
       - ".github/workflows/codemind-windows.yml"
   workflow_dispatch:
 
@@ -25,7 +25,7 @@ jobs:
       - name: Compile changed Python modules
         shell: pwsh
         run: |
-          python -m py_compile src/serena/mcp.py src/serena/codemind/learning.py src/serena/codemind/modules.py src/serena/codemind/planner.py src/serena/tools/codemind_tools.py test/serena/test_codemind_guard.py
+          python -m py_compile src/serena/mcp.py src/serena/codemind/learning.py src/serena/codemind/modules.py src/serena/codemind/planner.py src/serena/codemind/health.py src/serena/tools/codemind_tools.py test/serena/test_codemind_guard.py test/serena/test_codemind_health.py test/serena/test_codemind_registry.py
       - name: Install isolated test framework
         shell: pwsh
         run: python -m pip install pytest
@@ -33,4 +33,11 @@ jobs:
         shell: pwsh
         env:
           PYTHONPATH: src
-        run: python -m pytest --noconftest -q test/serena/test_codemind_guard.py
+        run: python -m pytest --noconftest -q test/serena/test_codemind_guard.py test/serena/test_codemind_health.py
+      - uses: astral-sh/setup-uv@v5
+      - name: Install pinned Serena runtime for actual tool integration
+        shell: pwsh
+        run: uv sync --extra dev --locked
+      - name: Run Serena MCP registration and tool dispatch integration tests
+        shell: pwsh
+        run: uv run --no-sync python -m pytest -q test/serena/test_codemind_registry.py test/serena/test_mcp.py
