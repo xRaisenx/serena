@@ -25,7 +25,9 @@ def mk_probe(transport):
 def healthy_response(request, timeout):
     nonce = request.get_header("X-codemind-challenge")
     proof = hmac.new(("x" * 40).encode(), (nonce + ":WindowsCommander.McpServer:v1").encode(), hashlib.sha256).hexdigest()
-    return json.dumps({"service": "WindowsCommander.McpServer", "ready": True, "mcp_initialize": True, "nonce": nonce, "proof": proof}).encode()
+    return json.dumps(
+        {"service": "WindowsCommander.McpServer", "ready": True, "mcp_initialize": True, "nonce": nonce, "proof": proof}
+    ).encode()
 
 
 def test_genuine_challenge_response_is_accepted():
@@ -33,7 +35,16 @@ def test_genuine_challenge_response_is_accepted():
 
 
 def test_stale_challenge_is_rejected():
-    assert mk_probe(lambda req, timeout: json.dumps({"nonce": "old", "service": "WindowsCommander.McpServer", "ready": True, "mcp_initialize": True}).encode()).check().ready is False
+    assert (
+        mk_probe(
+            lambda req, timeout: json.dumps(
+                {"nonce": "old", "service": "WindowsCommander.McpServer", "ready": True, "mcp_initialize": True}
+            ).encode()
+        )
+        .check()
+        .ready
+        is False
+    )
 
 
 def test_running_process_is_not_sufficient():
@@ -41,17 +52,41 @@ def test_running_process_is_not_sufficient():
         payload = json.loads(healthy_response(req, timeout))
         payload["mcp_initialize"] = False
         return json.dumps(payload).encode()
+
     assert mk_probe(response).check().reason == "peer_not_ready"
 
 
-@pytest.mark.parametrize("url", ["http://evil.example:99/codemind/health", "https://127.0.0.1:9881/codemind/health", "http://127.0.0.1:9881/", "http://127.0.0.1:9881/codemind/health?u=1", "http://name:pass@127.0.0.1:9881/codemind/health"])
+@pytest.mark.parametrize(
+    "url",
+    [
+        "http://evil.example:99/codemind/health",
+        "https://127.0.0.1:9881/codemind/health",
+        "http://127.0.0.1:9881/",
+        "http://127.0.0.1:9881/codemind/health?u=1",
+        "http://name:pass@127.0.0.1:9881/codemind/health",
+    ],
+)
 def test_remote_or_unsafe_endpoints_denied(url):
     with pytest.raises(ValueError):
         MODULE.CommanderHealthProbe(url, "x" * 40)
 
 
 def test_unsigned_fake_health_is_rejected():
-    assert mk_probe(lambda req, timeout: json.dumps({"nonce": req.get_header("X-codemind-challenge"), "service": "WindowsCommander.McpServer", "ready": True, "mcp_initialize": True}).encode()).check().reason == "authentication_failed"
+    assert (
+        mk_probe(
+            lambda req, timeout: json.dumps(
+                {
+                    "nonce": req.get_header("X-codemind-challenge"),
+                    "service": "WindowsCommander.McpServer",
+                    "ready": True,
+                    "mcp_initialize": True,
+                }
+            ).encode()
+        )
+        .check()
+        .reason
+        == "authentication_failed"
+    )
 
 
 def test_oversized_response_fails_closed():
