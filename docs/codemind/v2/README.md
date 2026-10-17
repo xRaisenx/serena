@@ -14,10 +14,11 @@
 5. [04-DELIVERY-AND-ACCEPTANCE.md](04-DELIVERY-AND-ACCEPTANCE.md) — milestone gates, C01–C30 validation, incident/runbook, resource budgets and release-level proof.
 6. [05-NMBV-TO-CODEMIND-CROSSWALK.md](05-NMBV-TO-CODEMIND-CROSSWALK.md) — exact NMBV 25-skill source names/paths, proposed CODEMIND method translations, native coordinator mappings, CODEMIND-100 metadata, FU and independent Commander.
 7. [06-UI-API-BINDINGS.json](06-UI-API-BINDINGS.json) — machine-readable v1/v2 route and frontend action mapping with explicit feature availability.
+8. [07-S1A-EVIDENCE.md](07-S1A-EVIDENCE.md) — current source tests and independent Windows sidecar HTTP verification, with the active primary-runtime parity explicitly unverified.
 
 ## Immediate work directive
 
-The feature branch now implements the **S1-A backend** with `/codemind/api/v2/overview`, `/v2/capabilities` and a bounded read-only `/v2/skills/route` endpoint, plus an advisory skill form in the existing console. **Windows CI validated the targeted implementation; running Windows build parity and full S1 browser interaction evidence are still outstanding.** Revalidate S0 and the entire S1 UI/backend contract before proceeding to S2. Every enabled control must be tested through its backend, including negative states. Continue to S2 only after S1 acceptance.
+The feature branch now implements the **S1-A backend** with `/codemind/api/v2/overview`, `/v2/capabilities` and a bounded read-only `/v2/skills/route` endpoint, plus an advisory skill form in the existing console. **Windows CI and a separately launched local Windows Serena instance validated the targeted API implementation; primary running-build parity and full S1 browser interaction evidence remain outstanding.** Revalidate S0 and the entire S1 UI/backend contract before proceeding to S2. Every enabled control must be tested through its backend, including negative states. Continue to S2 only after S1 acceptance.
 
 **Do not** global-find-and-replace `nmbv`→`codemind`; introduce new `codemind_*` APIs while preserving NMBV-specific connector names at the compatibility boundary. Do not import client records or bypass NMBV's task/page/source authorization. No first-run automatic Commander restart.
 
@@ -35,9 +36,9 @@ The feature branch now implements the **S1-A backend** with `/codemind/api/v2/ov
 | Surface | Source branch | Live Windows parity / proof |
 |---|---|---|
 | V1 Serena API and dashboard | Preserved | Previously observed, running revision not attested |
-| `GET /codemind/api/v2/overview` | Implemented; real observed/unknown values | Pending local deployment and fresh live HTTP probe |
-| `GET /codemind/api/v2/capabilities` | Implemented; explicit NOT_IMPLEMENTED flags | Pending local deployment |
-| `POST /codemind/api/v2/skills/route` | Implemented via validated active-project SkillRouter; no execution | Pending local deployment |
+| `GET /codemind/api/v2/overview` | Implemented; real observed/unknown values | Local sidecar live PASS; primary runtime pending |
+| `GET /codemind/api/v2/capabilities` | Implemented; explicit NOT_IMPLEMENTED flags | Local sidecar live PASS; primary runtime pending |
+| `POST /codemind/api/v2/skills/route` | Implemented via validated active-project SkillRouter; no execution | Local sidecar live PASS (200/403); primary runtime pending |
 | V2 skill-route GUI | Source wired to authenticated API; errors and timeout visible | Pending Windows browser acceptance |
 | CODEMIND-100 + full 25-skills | Reference crosswalk only | No installed runtime proof |
 | FU 5+20, governed lesson promotion, dual-watchdog | Design contracts only | Not complete |
