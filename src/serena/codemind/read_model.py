@@ -26,7 +26,8 @@ def build_v2_overview(v1: dict[str, Any], *, observed_at: str | None = None) -> 
         return value if type(value) is int and value >= 0 else None
 
     active_count = integer_or_none(tools.get("active_count")) if tools.get("state") != "unavailable" else None
-    skill_count = len(skills.get("items")) if skills.get("state") == "available" and isinstance(skills.get("items"), list) else None
+    skill_items = skills.get("items")
+    skill_count = len(skill_items) if skills.get("state") == "available" and isinstance(skill_items, list) else None
     return {
         "schema": 2,
         "application": "CODEMIND Serena",
