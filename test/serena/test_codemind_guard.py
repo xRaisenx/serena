@@ -6,8 +6,23 @@ from pathlib import Path
 
 import pytest
 
-from serena.codemind.learning import FailureGuard, StrategyChangeRequired
-from serena.codemind.modules import SkillManifestRegistry
+import importlib.util
+
+
+def _load_module(name: str):
+    source = Path(__file__).resolve().parents[2] / "src" / "serena" / "codemind" / (name + ".py")
+    spec = importlib.util.spec_from_file_location("codemind_test_" + name, source)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+_learning = _load_module("learning")
+_modules = _load_module("modules")
+FailureGuard = _learning.FailureGuard
+StrategyChangeRequired = _learning.StrategyChangeRequired
+SkillManifestRegistry = _modules.SkillManifestRegistry
 
 
 def test_two_equivalent_failures_block_third_even_after_restart(tmp_path: Path):
