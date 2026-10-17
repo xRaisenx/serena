@@ -203,6 +203,14 @@
     ]);
     text("commander-health-chip", peer.ready && peer.authenticated ? "VERIFIED READY" : "NOT VERIFIED");
     const tunnel = snapshot.tunnel || {};
+    text("key-status-chip", tunnel.key_configured ? "ENCRYPTED KEY SAVED" : "KEY MISSING");
+    details("tunnel-settings-details", [
+      ["Key stored for this Windows user", bool(tunnel.key_configured)],
+      ["Managed tunnel process", bool(tunnel.managed_process_running)],
+      ["Client ready", bool(tunnel.client_ready)],
+      ["Local readiness signal", phrase(tunnel.health)],
+      ["ChatGPT round-trip", tunnel.connection_verified ? "Verified" : "Not verified"],
+    ]);
     text("tunnel-chip", tunnel.connection_verified ? "CONNECTED" : "UNVERIFIED");
     details("connection-details", [
       ["Tunnel ID", tunnel.id || "Not configured in runtime"],
@@ -257,6 +265,69 @@
       byId("refresh-btn").disabled = false;
     }
   }
+
+  async function tunnelAction(path, method = "POST", body) {
+    if (!state.token || state.busy) {
+      notify("Unlock the dashboard and wait for the current request to finish.");
+      return;
+    }
+    const display = byId("tunnel-result");
+    display.textContent = "Processing " + path.split("/").pop() + "…";
+    const controls = all("#tunnel-key-form button, .connection-actions button");
+    controls.forEach(control => control.disabled = true);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 44000);
+    try {
+      const response = await fetch("/codemind/api/tunnel/" + path, {
+        method, credentials: "same-origin", cache: "no-store",
+        headers: {
+          Authorization: "Bearer " + state.token,
+          Accept: "application/json",
+          ...(body ? { "Content-Type": "application/json" } : {}),
+        },
+        body: body ? JSON.stringify(body) : undefined,
+        signal: controller.signal,
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || result.message || "Request failed (HTTP " + response.status + ")");
+      const message = path === "key" ? "API key encrypted and stored for this Windows user. Run diagnostics next." :
+        path === "doctor" ? (result.passed ? "Tunnel doctor PASS. You may now start the client." : "Tunnel doctor did not pass.") :
+        path === "start" ? (result.tunnel?.client_ready ? "Tunnel client reports ready. Verify ChatGPT next." :
+          "Tunnel process was launched. Waiting for live readiness; refresh.") :
+        path === "stop" ? "Managed tunnel stopped." : "Action completed.";
+      display.textContent = message;
+      notify(message);
+      await refresh();
+    } catch (error) {
+      const message = error.name === "AbortError" ? "Action timed out; status is unverified." : error.message;
+      display.textContent = message;
+      notify(message);
+      await refresh();
+    } finally {
+      clearTimeout(timeout);
+      controls.forEach(control => control.disabled = false);
+    }
+  }
+
+  byId("tunnel-key-form").addEventListener("submit", event => {
+    event.preventDefault();
+    const input = byId("tunnel-api-key");
+    const key = input.value;
+    input.value = ""; // Never retain raw secret in the DOM after submission.
+    if (!/^sk-[A-Za-z0-9_-]{29,250}$/.test(key)) {
+      notify("Enter a complete, unmasked OpenAI Platform API key.");
+      return;
+    }
+    tunnelAction("key", "POST", { api_key: key });
+  });
+  byId("tunnel-doctor").addEventListener("click", () => tunnelAction("doctor"));
+  byId("tunnel-start").addEventListener("click", () => tunnelAction("start"));
+  byId("tunnel-stop").addEventListener("click", () => tunnelAction("stop"));
+  byId("tunnel-remove-key").addEventListener("click", () => {
+    if (window.confirm("Remove the encrypted tunnel runtime API key for this Windows account?")) {
+      tunnelAction("key", "DELETE");
+    }
+  });
 
   byId("unlock-form").addEventListener("submit", async event => {
     event.preventDefault();
