@@ -105,9 +105,7 @@ def test_static_console_artifacts_present():
 
 def test_tunnel_api_rejects_anonymous_or_wrong_token(console):
     assert console.post("/codemind/api/tunnel/doctor").status_code == 401
-    assert console.post(
-        "/codemind/api/tunnel/start", headers={"Authorization": "Bearer " + "z" * 40}
-    ).status_code == 401
+    assert console.post("/codemind/api/tunnel/start", headers={"Authorization": "Bearer " + "z" * 40}).status_code == 401
 
 
 def test_tunnel_api_rejects_cross_origin(console):
@@ -151,9 +149,7 @@ def test_doctor_failure_never_claims_success(console, monkeypatch):
         "doctor",
         lambda: {"passed": False, "exit_code": 17, "message": "Tunnel diagnostics failed"},
     )
-    result = console.post(
-        "/codemind/api/tunnel/doctor", headers={"Authorization": "Bearer " + "c" * 40}
-    )
+    result = console.post("/codemind/api/tunnel/doctor", headers={"Authorization": "Bearer " + "c" * 40})
     assert result.status_code == 409
     assert result.get_json()["passed"] is False
 
@@ -170,8 +166,6 @@ def test_tunnel_start_does_not_imply_chatgpt_acceptance(console, monkeypatch):
         "start",
         lambda: {"managed_process_running": True, "client_ready": False, "connection_verified": False},
     )
-    response = console.post(
-        "/codemind/api/tunnel/start", headers={"Authorization": "Bearer " + "c" * 40}
-    )
+    response = console.post("/codemind/api/tunnel/start", headers={"Authorization": "Bearer " + "c" * 40})
     assert response.status_code == 200
     assert response.get_json()["tunnel"]["connection_verified"] is False
