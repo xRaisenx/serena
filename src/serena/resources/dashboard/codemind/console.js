@@ -1,7 +1,7 @@
 /* CODEMIND Serena Mission Control. Same-origin, read-only. No secrets on disk. */
 "use strict";
 (() => {
-  const state = { token: "", snapshot: null, v2: null, view: "overview", theme: "dark", busy: false };
+  const state = { token: "", snapshot: null, v2: null, catalog: null, view: "overview", theme: "dark", busy: false };
   const byId = id => document.getElementById(id);
   const all = selector => Array.from(document.querySelectorAll(selector));
   const text = (id, value) => { const node = byId(id); if (node) node.textContent = value == null ? "—" : String(value); };
@@ -65,6 +65,7 @@
     const header = document.querySelector('.page-section[data-page="' + name + '"] h1');
     if (header) header.focus({ preventScroll: true });
     if (name === "tools") renderTools();
+    if (name === "skills") loadMethodCatalog();
   }
 
   function categorizeTool(name) {
@@ -223,6 +224,131 @@
     renderSkills(snapshot);
     renderTasks(snapshot);
     renderAcceptance(snapshot);
+  }
+
+
+  function renderMethodCatalog() {
+    const node = byId("method-list");
+    node.replaceChildren();
+    const data = state.catalog;
+    if (!data || data.state !== "REFERENCE_ONLY" || !Array.isArray(data.methods)) {
+      text("method-count", "CATALOG UNAVAILABLE");
+      node.append(element("p", "empty-state", "This runtime does not expose a verified method reference catalog."));
+      return;
+    }
+    const q = byId("method-search").value.trim().toLowerCase();
+    const selected = data.methods.filter(item =>
+      [item.id, item.description, item.source_name].some(x => String(x || "").toLowerCase().includes(q)));
+    text("method-count", selected.length + " OF " + data.count + " REFERENCES");
+    if (!selected.length) {
+      node.append(element("p", "empty-state", "No matching reference methods."));
+      return;
+    }
+    for (const method of selected) {
+      const card = element("article", "method-reference");
+      card.append(element("span", "tool-type", "REFERENCE ONLY • NOT INSTALLED"),
+        element("strong", "", method.id),
+        element("p", "", method.description),
+        element("small", "method-source", "Origin: " + method.source_name));
+      node.append(card);
+    }
+  }
+
+  async function loadMethodCatalog() {
+    if (!state.token || state.catalog) { renderMethodCatalog(); return; }
+    const currentToken = state.token;
+    try {
+      const response = await fetch("/codemind/api/v2/methods", {
+        method: "GET", credentials: "same-origin", cache: "no-store",
+        headers: { Authorization: "Bearer " + currentToken, Accept: "application/json" },
+      });
+      if (!response.ok) throw new Error("Catalog HTTP " + response.status);
+      const data = await response.json();
+      if (data.schema !== 2 || data.state !== "REFERENCE_ONLY" || data.count !== 25 ||
+          !Array.isArray(data.methods) || data.methods.length !== 25 ||
+          data.methods.some(x => x.state !== "REFERENCE_ONLY" || x.loaded !== false || x.executed !== false)) {
+        throw new Error("Catalog contains unsupported installation claims.");
+      }
+      if (currentToken !== state.token) return;
+      state.catalog = data;
+      renderMethodCatalog();
+    } catch {
+      if (currentToken === state.token) renderMethodCatalog();
+    }
+  }
+
+  function renderForecast(result) {
+    const target = byId("forecast-preview");
+    const future = byId("forecast-futures");
+    target.replaceChildren();
+    future.replaceChildren();
+    details("forecast-canonical", [
+      ["Action", result.canonical.action],
+      ["Evidence gate", result.canonical.evidence_gate],
+      ["Task binding", result.task_binding],
+      ["Selected intent", result.intent],
+      ["Execution authorization", "NOT GRANTED"],
+    ]);
+    const renderList = (node, items) => {
+      if (!items.length) { node.append(element("li", "", "No grounded future actions.")); return; }
+      for (const candidate of items) {
+        const li = element("li");
+        li.append(element("span", "advisory-tag", candidate.verdict + " • NON-EXECUTABLE"),
+          element("strong", "", candidate.action),
+          element("small", "", candidate.evidence_gate));
+        node.append(li);
+      }
+    };
+    renderList(target, result.preview);
+    renderList(future, result.fu_candidates);
+    text("forecast-count", result.fu_candidates.length + " CONDITIONAL CANDIDATES");
+    text("forecast-status", "Advisory preview generated. " + result.blocker +
+      ". No task was scheduled; no tools were invoked; all future candidates require new evidence.");
+  }
+
+  async function requestForecast(event) {
+    event.preventDefault();
+    const input = byId("forecast-input");
+    const goal = input.value.trim();
+    const submit = byId("forecast-submit");
+    if (!state.token || state.busy) {
+      text("forecast-status", "Authenticate and finish the current request first.");
+      return;
+    }
+    if (goal.length < 3 || goal.length > 1000) {
+      text("forecast-status", "Enter 3 to 1,000 characters.");
+      return;
+    }
+    submit.disabled = true;
+    text("forecast-status", "Computing a bounded evidence-gated preview…");
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 11000);
+    const currentToken = state.token;
+    try {
+      const response = await fetch("/codemind/api/v2/actions/preview", {
+        method: "POST", credentials: "same-origin", cache: "no-store",
+        headers: { Authorization: "Bearer " + currentToken, Accept: "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify({ request_text: goal }), signal: controller.signal,
+      });
+      if (!response.ok) throw new Error("Preview unavailable: HTTP " + response.status);
+      const result = await response.json();
+      if (result.schema !== 2 || result.state !== "ADVISORY_ONLY" ||
+          result.authorization_granted !== false || result.canonical?.authorized !== false ||
+          !Array.isArray(result.preview) || result.preview.length > 5 ||
+          !Array.isArray(result.fu_candidates) || result.fu_candidates.length > 20 ||
+          result.fu_candidates.some(x => x.executable !== false || x.authorized_by_forecast !== false)) {
+        throw new Error("Unsafe or invalid preview response. Nothing executed.");
+      }
+      if (state.token === currentToken) renderForecast(result);
+    } catch (error) {
+      if (state.token === currentToken)
+        text("forecast-status", error.name === "AbortError" ?
+          "Forecast timed out; no result has been accepted." :
+          "Preview failed: " + error.message + ". Nothing executed.");
+    } finally {
+      clearTimeout(timeout);
+      submit.disabled = false;
+    }
   }
 
   async function refresh() {
@@ -408,6 +534,11 @@
   }
 
   byId("skill-route-form").addEventListener("submit", routeSkillRequest);
+  byId("forecast-form").addEventListener("submit", requestForecast);
+  byId("method-search").addEventListener("input", renderMethodCatalog);
+  byId("clear-methods").addEventListener("click", () => {
+    byId("method-search").value = ""; renderMethodCatalog(); byId("method-search").focus();
+  });
   byId("unlock-form").addEventListener("submit", async event => {
     event.preventDefault();
     const token = byId("operator-token").value;
@@ -416,7 +547,7 @@
     await refresh();
   });
   byId("lock-btn").addEventListener("click", () => {
-    state.token = ""; state.snapshot = null; state.v2 = null;
+    state.token = ""; state.snapshot = null; state.v2 = null; state.catalog = null;
     byId("workspace").hidden = true; byId("unlock").hidden = false;
     byId("operator-token").focus(); notify("Session locked; no operator token retained.");
   });
