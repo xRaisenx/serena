@@ -7,11 +7,25 @@ import re
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from serena.codemind.modules import SkillManifestRegistry
     from serena.codemind.learning import FailureGuard
+    from serena.codemind.modules import SkillManifestRegistry
 
 _WORD = re.compile(r"[a-z][a-z0-9]*")
-_STOP = frozenset({"the", "and", "for", "that", "with", "this", "from", "your", "into", "after", "before"})
+_STOP = frozenset(
+    {
+        "the",
+        "and",
+        "for",
+        "that",
+        "with",
+        "this",
+        "from",
+        "your",
+        "into",
+        "after",
+        "before",
+    }
+)
 
 
 class SkillRouter:

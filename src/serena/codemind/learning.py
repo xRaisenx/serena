@@ -23,12 +23,8 @@ class FailureGuard:
     _lock = threading.RLock()
 
     def __init__(self, db_path: Path | None = None):
-        default_dir = (
-            Path(os.environ.get("LOCALAPPDATA") or Path.home()) / "CodemindSerena"
-        )
-        self._db_path = (
-            Path(db_path) if db_path is not None else default_dir / "failures.sqlite3"
-        )
+        default_dir = Path(os.environ.get("LOCALAPPDATA") or Path.home()) / "CodemindSerena"
+        self._db_path = Path(db_path) if db_path is not None else default_dir / "failures.sqlite3"
         self._db_path.parent.mkdir(parents=True, exist_ok=True)
         with self._connect() as db:
             db.execute(
@@ -73,9 +69,7 @@ class FailureGuard:
     def check(self, workspace: str, tool_name: str, arguments: dict[str, Any]) -> None:
         key = self._key(workspace, tool_name, arguments)
         with self._lock, self._connect() as db:
-            row = db.execute(
-                "SELECT consecutive FROM attempts WHERE key=?", (key,)
-            ).fetchone()
+            row = db.execute("SELECT consecutive FROM attempts WHERE key=?", (key,)).fetchone()
             if row is not None and row[0] >= 2:
                 raise StrategyChangeRequired(
                     "STRATEGY_CHANGE_REQUIRED: two consecutive equivalent failures. "
@@ -94,9 +88,7 @@ class FailureGuard:
             self._failure(error),
         )
         with self._lock, self._connect() as db:
-            row = db.execute(
-                "SELECT fingerprint, consecutive FROM attempts WHERE key=?", (key,)
-            ).fetchone()
+            row = db.execute("SELECT fingerprint, consecutive FROM attempts WHERE key=?", (key,)).fetchone()
             count = row[1] + 1 if row and row[0] == fingerprint else 1
             db.execute(
                 "INSERT INTO attempts(key,fingerprint,consecutive) VALUES(?,?,?) "
@@ -106,18 +98,14 @@ class FailureGuard:
             )
             return count
 
-    def success(
-        self, workspace: str, tool_name: str, arguments: dict[str, Any]
-    ) -> None:
+    def success(self, workspace: str, tool_name: str, arguments: dict[str, Any]) -> None:
         with self._lock, self._connect() as db:
             db.execute(
                 "DELETE FROM attempts WHERE key=?",
                 (self._key(workspace, tool_name, arguments),),
             )
 
-    def status(
-        self, workspace: str, tool_name: str, arguments: dict[str, Any]
-    ) -> dict[str, Any]:
+    def status(self, workspace: str, tool_name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         with self._lock, self._connect() as db:
             row = db.execute(
                 "SELECT consecutive, updated_at FROM attempts WHERE key=?",

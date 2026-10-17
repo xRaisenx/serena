@@ -31,7 +31,7 @@ class SkillManifestRegistry:
                 raise ValueError("Skill manifest exceeds 64 KiB")
             obj = json.loads(path.read_text(encoding="utf-8"))
             if not isinstance(obj, dict):
-                raise ValueError("Skill manifest must be a JSON object")
+                raise TypeError("Skill manifest must be a JSON object")
             if set(obj) != {"id", "version", "description", "instructions", "enabled"}:
                 raise ValueError("Invalid skill manifest fields")
             if not isinstance(obj["id"], str) or not _SKILL_ID.fullmatch(obj["id"]):

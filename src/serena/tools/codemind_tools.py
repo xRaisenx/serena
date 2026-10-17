@@ -30,7 +30,7 @@ class CodemindFailureStatusTool(Tool):
         """
         arguments = json.loads(arguments_json)
         if not isinstance(arguments, dict):
-            raise ValueError("arguments_json must be an object")
+            raise TypeError("arguments_json must be an object")
         result = FailureGuard().status(self.get_project_root(), tool_name, arguments)
         return json.dumps(result, sort_keys=True)
 
@@ -67,9 +67,7 @@ class CodemindSkillRouteTool(Tool):
         """
         from serena.codemind.planner import SkillRouter
 
-        registry = SkillManifestRegistry(
-            Path(self.get_project_root()) / ".codemind" / "skills"
-        )
+        registry = SkillManifestRegistry(Path(self.get_project_root()) / ".codemind" / "skills")
         return json.dumps(SkillRouter(registry).route(request), sort_keys=True)
 
 
@@ -86,8 +84,6 @@ class CodemindNextActionTool(Tool):
 
         arguments = json.loads(arguments_json)
         if not isinstance(arguments, dict):
-            raise ValueError("arguments_json must be an object")
-        action = NextActionPlanner(FailureGuard()).recommend(
-            self.get_project_root(), tool_name, arguments
-        )
+            raise TypeError("arguments_json must be an object")
+        action = NextActionPlanner(FailureGuard()).recommend(self.get_project_root(), tool_name, arguments)
         return json.dumps(action, sort_keys=True)

@@ -46,9 +46,7 @@ def configure_logging(*args, **kwargs) -> None:
     # We only do something here if logging has not yet been configured.
     # Normally, logging is configured in the MCP server startup script.
     if not logging.is_enabled():
-        logging.basicConfig(
-            level=logging.INFO, stream=sys.stderr, format=SERENA_LOG_FORMAT
-        )
+        logging.basicConfig(level=logging.INFO, stream=sys.stderr, format=SERENA_LOG_FORMAT)
 
 
 # patch the logging configuration function in fastmcp, because it's hard-coded and broken
@@ -89,9 +87,7 @@ class SerenaMCPRequestContext:
 
 
 class SerenaFastMCPTool(FastMCPTool):
-    def __init__(
-        self, tool: Tool, openai_tool_compatible: bool, structured_output: bool | None
-    ):
+    def __init__(self, tool: Tool, openai_tool_compatible: bool, structured_output: bool | None):
         """
         :param tool: the Serena tool
         :param openai_tool_compatible: whether to process the tool schema to be compatible with OpenAI tools
@@ -100,9 +96,7 @@ class SerenaFastMCPTool(FastMCPTool):
         """
         func_name = tool.get_name()
         func_doc = tool.get_apply_docstring() or ""
-        func_arg_metadata = tool.get_apply_fn_metadata(
-            structured_output=structured_output
-        )
+        func_arg_metadata = tool.get_apply_fn_metadata(structured_output=structured_output)
         is_async = False
         parameters = func_arg_metadata.arg_model.model_json_schema()
         if openai_tool_compatible:
@@ -112,9 +106,7 @@ class SerenaFastMCPTool(FastMCPTool):
 
         # Mount the tool description as a combination of the docstring description and
         # the return value description, if it exists.
-        overridden_description = (
-            tool.agent.get_context().tool_description_overrides.get(func_name, None)
-        )
+        overridden_description = tool.agent.get_context().tool_description_overrides.get(func_name, None)
 
         if overridden_description is not None:
             func_doc = overridden_description
@@ -125,9 +117,7 @@ class SerenaFastMCPTool(FastMCPTool):
         func_doc = func_doc.strip().strip(".")
         if func_doc:
             func_doc += "."
-        if docstring.returns and (
-            docstring_returns_descr := docstring.returns.description
-        ):
+        if docstring.returns and (docstring_returns_descr := docstring.returns.description):
             # Only add a space before "Returns" if func_doc is not empty
             prefix = " " if func_doc else ""
             func_doc = f"{func_doc}{prefix}Returns {docstring_returns_descr.strip().strip('.')}."
@@ -366,9 +356,7 @@ class SerenaMCPFactory:
         yield from self.agent.get_exposed_tool_instances()
 
     # noinspection PyProtectedMember
-    def _set_mcp_tools(
-        self, mcp: FastMCP, openai_tool_compatible: bool, structured_output: bool | None
-    ) -> None:
+    def _set_mcp_tools(self, mcp: FastMCP, openai_tool_compatible: bool, structured_output: bool | None) -> None:
         """
         Update the tools in the MCP server
 
@@ -385,9 +373,7 @@ class SerenaMCPFactory:
                     structured_output=structured_output,
                 )
                 mcp._tool_manager._tools[tool.get_name()] = mcp_tool
-            log.info(
-                f"Starting MCP server with {len(mcp._tool_manager._tools)} tools: {list(mcp._tool_manager._tools.keys())}"
-            )
+            log.info(f"Starting MCP server with {len(mcp._tool_manager._tools)} tools: {list(mcp._tool_manager._tools.keys())}")
 
     def _create_serena_agent(
         self,
@@ -412,8 +398,7 @@ class SerenaMCPFactory:
         enable_web_dashboard: bool | None = None,
         enable_gui_log_window: bool | None = None,
         open_web_dashboard: bool | None = None,
-        log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
-        | None = None,
+        log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] | None = None,
         trace_lsp_communication: bool | None = None,
         tool_timeout: float | None = None,
         project_activation_error: str | None = None,
