@@ -525,9 +525,15 @@
       }
       const names = Array.isArray(result.selected) ?
         result.selected.slice(0, 3).map(item => String(item.skill_id) + " (score " + Number(item.score) + ")") : [];
-      target.textContent = names.length ?
-        "Selected: " + names.join(", ") + ". Loaded: 0; executed: 0; permission granted: NO." :
-        "No matching project skill. Loaded: 0; executed: 0; permission granted: NO.";
+      const referenceNames = Array.isArray(result.reference_suggestions) ?
+        result.reference_suggestions.slice(0, 3).filter(item => item.state === "REFERENCE_ONLY")
+          .map(item => String(item.id)) : [];
+      target.textContent =
+        (names.length ? "Installed skill selection: " + names.join(", ") + ". " :
+          "No matching installed project skill. ") +
+        (referenceNames.length ? "Method references (not installed): " + referenceNames.join(", ") + ". " :
+          "No matching reference method. ") +
+        "Loaded: 0; executed: 0; permission granted: NO.";
     } catch (error) {
       target.textContent = error.name === "AbortError" ?
         "Routing timed out; no selection or execution is confirmed." :
