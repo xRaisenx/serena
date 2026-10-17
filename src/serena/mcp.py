@@ -128,10 +128,24 @@ class SerenaFastMCPTool(FastMCPTool):
                 properties["description"] = param_desc[0].upper() + param_desc[1:]
 
         def execute_fn(**kwargs) -> str:
+            # CODEMIND: enforce repeat-failure safety at the actual MCP dispatch boundary.
+            from serena.codemind.learning import FailureGuard
             try:
-                return tool.apply_ex(log_call=True, catch_exceptions=False, **kwargs)
+                workspace = tool.get_project_root()
+            except (RuntimeError, ValueError, AttributeError):
+                workspace = "__unbound__"
+            guard = FailureGuard()
+            guard.check(workspace, func_name, kwargs)
+            try:
+                result = tool.apply_ex(log_call=True, catch_exceptions=False, **kwargs)
             except ToolCallError as e:
+                guard.failure(workspace, func_name, kwargs, e)
                 raise ToolError(e.get_error_message()) from e
+            except Exception as e:
+                guard.failure(workspace, func_name, kwargs, e)
+                raise
+            guard.success(workspace, func_name, kwargs)
+            return result
 
         # Generate human-readable title from snake_case tool name
         tool_title = " ".join(word.capitalize() for word in func_name.split("_"))
