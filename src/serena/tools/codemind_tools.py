@@ -81,8 +81,14 @@ class CodemindSkillRouteTool(Tool):
         """
         from serena.codemind.planner import SkillRouter
 
+        from serena.codemind.methods import recommend_method_references
+
         registry = SkillManifestRegistry(Path(self.get_project_root()) / ".codemind" / "skills")
-        return json.dumps(SkillRouter(registry).route(request), sort_keys=True)
+        route = SkillRouter(registry).route(request)
+        route["reference_suggestions"] = recommend_method_references(request)["selected_references"]
+        route["loaded"] = []
+        route["executed"] = []
+        return json.dumps(route, sort_keys=True)
 
 
 class CodemindNextActionTool(Tool):
