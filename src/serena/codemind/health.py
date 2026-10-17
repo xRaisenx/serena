@@ -4,6 +4,7 @@
 This module never starts or stops any process. It makes no claims of live
 Commander interoperability until the peer implements the attested contract.
 """
+
 from __future__ import annotations
 
 import hmac
@@ -73,7 +74,9 @@ class CommanderHealthProbe:
                 return PeerStatus(False, "invalid_shape")
             if not secrets.compare_digest(str(obj.get("nonce", "")), nonce):
                 return PeerStatus(False, "challenge_mismatch")
-            expected_proof = hmac.new(self._token.encode("utf-8"), (nonce + ":WindowsCommander.McpServer:v1").encode("utf-8"), hashlib.sha256).hexdigest()
+            expected_proof = hmac.new(
+                self._token.encode("utf-8"), (nonce + ":WindowsCommander.McpServer:v1").encode("utf-8"), hashlib.sha256
+            ).hexdigest()
             if not secrets.compare_digest(str(obj.get("proof", "")), expected_proof):
                 return PeerStatus(False, "authentication_failed")
             if obj.get("service") != "WindowsCommander.McpServer":
