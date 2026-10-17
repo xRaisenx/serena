@@ -232,6 +232,11 @@ class SerenaDashboardAPI:
         self._loaded_news: dict[str, str] = {}
         self._news_ready = threading.Event()
         self._setup_routes()
+        # CODEMIND: expose authenticated, read-only operator telemetry without
+        # modifying upstream Serena dashboard routes or process lifecycle.
+        from serena.codemind.dashboard_api import register_codemind_routes
+
+        register_codemind_routes(self._app, self._agent, self._tool_names, self._tool_usage_stats)
         self._read_news = ReadNews.load()
         self._newer_serena_version: str | None = None
 
