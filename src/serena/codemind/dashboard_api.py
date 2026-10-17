@@ -18,6 +18,8 @@ from flask import Blueprint, abort, jsonify, redirect, request
 from serena.codemind.health import CommanderHealthProbe
 from serena.codemind.learning import FailureGuard
 from serena.codemind.modules import SkillManifestRegistry
+from serena.codemind.planner import SkillRouter
+from serena.codemind.read_model import build_v2_overview
 from serena.codemind.tunnel_control import TunnelControlError
 from serena.codemind.tunnel_control import controller as tunnel_controller
 
@@ -189,13 +191,14 @@ def register_codemind_routes(app: Any, agent: Any, tool_names: list[str], tool_u
             return jsonify({"ok": False, "error": str(exc)}), 409
         return jsonify({"ok": True, "tunnel": status}), 200
 
-    @bp.get("/overview")
-    def overview() -> Any:
+    def collect_overview() -> dict[str, Any]:
         project, project_status = project_info()
         try:
             active_names = list(agent.get_active_tool_names())
+            tools_state = "available"
         except Exception:
             active_names = []
+            tools_state = "unavailable"
         try:
             mode = agent.get_context().name
         except Exception:
@@ -215,7 +218,12 @@ def register_codemind_routes(app: Any, agent: Any, tool_names: list[str], tool_u
             "serena_version": version,
             "context": mode,
             "project": project_status,
-            "tools": {"registered_count": len(tool_names), "active_count": len(active_names), "active": sorted(active_names)},
+            "tools": {
+                "state": tools_state,
+                "registered_count": len(tool_names),
+                "active_count": len(active_names) if tools_state == "available" else None,
+                "active": sorted(active_names),
+            },
             "skills": inspect_skills(project),
             "learning": inspect_learning(),
             "tasks": inspect_tasks(),
@@ -238,7 +246,55 @@ def register_codemind_routes(app: Any, agent: Any, tool_names: list[str], tool_u
             },
             "security": {"operator_authenticated": True, "write_actions_enabled": False, "tunnel_settings_enabled": True},
         }
-        return jsonify(payload)
+        return payload
+
+    @bp.get("/overview")
+    def overview() -> Any:
+        return jsonify(collect_overview())
+
+    @bp.get("/v2/overview")
+    def overview_v2() -> Any:
+        return jsonify(build_v2_overview(collect_overview()))
+
+    @bp.get("/v2/capabilities")
+    def capabilities_v2() -> Any:
+        current = build_v2_overview(collect_overview())
+        return jsonify({
+            "schema": 2,
+            "observed_at": current["observed_at"],
+            "source": current["source"],
+            "capabilities": current["capabilities"],
+        })
+
+    @bp.post("/v2/skills/route")
+    def route_skills_v2() -> Any:
+        require_same_origin()
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict) or set(payload) != {"request_text"}:
+            abort(400)
+        task = payload["request_text"]
+        if not isinstance(task, str) or not (3 <= len(task.strip()) <= 1000):
+            abort(400)
+        project, project_status = project_info()
+        if project is None:
+            return jsonify({"schema": 2, "state": "NO_ACTIVE_PROJECT", "selected": [], "loaded": [], "executed": [],
+                            "authorization_granted": False}), 409
+        try:
+            registry = SkillManifestRegistry(Path(project.project_root) / ".codemind" / "skills")
+            routed = SkillRouter(registry).route(task)
+        except (OSError, ValueError, TypeError):
+            return jsonify({"schema": 2, "state": "SKILL_VALIDATION_FAILED", "selected": [], "loaded": [],
+                            "executed": [], "authorization_granted": False}), 422
+        return jsonify({
+            "schema": 2,
+            "state": "ROUTED",
+            "project": project_status["name"],
+            "mode": routed["mode"],
+            "selected": routed["selected"],
+            "loaded": [],
+            "executed": [],
+            "authorization_granted": False,
+        })
 
     app.register_blueprint(bp, url_prefix="/codemind/api")
 
