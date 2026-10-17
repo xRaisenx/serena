@@ -122,7 +122,7 @@ class TunnelController:
         env = self._secret_env()
         try:
             result = subprocess.run(
-                [str(self._binary), "doctor", "--profile", PROFILE, "--explain"],
+                [str(self._binary), "doctor", "--profile", PROFILE, "--explain", "--health.listen-addr", "127.0.0.1:0"],
                 env=env,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
