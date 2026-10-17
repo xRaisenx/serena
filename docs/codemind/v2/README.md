@@ -17,17 +17,34 @@
 
 ## Immediate work directive
 
-Start at **S0**, validate current checkout + running version and v1 API tests, then implement **S1-A**: versioned read-only v2 overview contract with actual source/freshness/unknown fields, followed by professional Overview/Skills/Connections UI. Every enabled control must be tested through its backend, including negative states. Continue to S2 only after S1 acceptance.
+The feature branch now implements the **S1-A backend** with `/codemind/api/v2/overview`, `/v2/capabilities` and a bounded read-only `/v2/skills/route` endpoint, plus an advisory skill form in the existing console. **Windows CI validated the targeted implementation; running Windows build parity and full S1 browser interaction evidence are still outstanding.** Revalidate S0 and the entire S1 UI/backend contract before proceeding to S2. Every enabled control must be tested through its backend, including negative states. Continue to S2 only after S1 acceptance.
 
 **Do not** global-find-and-replace `nmbv`→`codemind`; introduce new `codemind_*` APIs while preserving NMBV-specific connector names at the compatibility boundary. Do not import client records or bypass NMBV's task/page/source authorization. No first-run automatic Commander restart.
 
 ## Verified vs proposed
 
 - The v1 Serena/code intelligence and CODEMIND status/tunnel dashboard sources were inspected in the feature branch. The NMBV capability inventory and routing/anti-loop/forecast source were inspected through NMBV Bot. CODEMIND-100 persona task wiring was read from its installed skill.
-- The named documents here have been **authored/committed**, but **no new v2 engine API, 25-module import or redesigned GUI** is claimed implemented from this documentation work.
+- The named documents here have been **authored/committed**, but **a narrow v2 read-model and skill-routing API is now implemented in source**, but **no 25-module import, complete redesigned GUI, trusted expert activation, or full V2 production acceptance** is claimed.
 - The 30 test cases are acceptance targets; no `PASS` is implied by their presence.
 - The existing NMBV v3 client's installed hooks, FU live remote runtime, governance and persistent lessons remain independent systems with their own test/evidence gates.
 - The next agent should establish branch HEAD, task ownership, exact source generation and current client first; never resume using only historical "passed" messages.
+
+
+## Current source-versus-runtime checkpoint (2026-10-18)
+
+| Surface | Source branch | Live Windows parity / proof |
+|---|---|---|
+| V1 Serena API and dashboard | Preserved | Previously observed, running revision not attested |
+| `GET /codemind/api/v2/overview` | Implemented; real observed/unknown values | Pending local deployment and fresh live HTTP probe |
+| `GET /codemind/api/v2/capabilities` | Implemented; explicit NOT_IMPLEMENTED flags | Pending local deployment |
+| `POST /codemind/api/v2/skills/route` | Implemented via validated active-project SkillRouter; no execution | Pending local deployment |
+| V2 skill-route GUI | Source wired to authenticated API; errors and timeout visible | Pending Windows browser acceptance |
+| CODEMIND-100 + full 25-skills | Reference crosswalk only | No installed runtime proof |
+| FU 5+20, governed lesson promotion, dual-watchdog | Design contracts only | Not complete |
+| ChatGPT tunnel | Local tunnel was previously ready and polling | ChatGPT-origin tool call not proven |
+| Full V2 acceptance C01-C30 | Requirements documented | Not complete; do not infer green from documentation |
+
+S1-A focused tests are `test/serena/test_codemind_v2.py`; the Windows CI workflow explicitly executes them. The GitHub checks are evidence about source on a CI runner, not evidence that your existing Serena process was restarted with the same code.
 
 ## Conflict resolution
 
