@@ -37,6 +37,18 @@ jobs:
           PYTHONPATH: src
         run: python -m pytest --noconftest -q test/serena/test_codemind_guard.py test/serena/test_codemind_health.py
       - uses: astral-sh/setup-uv@v5
+      - name: Launcher preflight on Windows PowerShell 5.1
+        shell: pwsh
+        run: |
+          $out = & "$env:WINDIR\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -NonInteractive -File scripts/start-codemind-serena.ps1 -CheckOnly 2>&1
+          if ($LASTEXITCODE -ne 0 -or -not ($out -match 'CODEMIND_LAUNCHER_PREFLIGHT_PASS')) { throw "PowerShell 5.1 launcher preflight failed: $out" }
+          Write-Output "PS51_LAUNCHER_PREFLIGHT_PASS"
+      - name: Launcher preflight on PowerShell 7
+        shell: pwsh
+        run: |
+          $out = & pwsh -NoProfile -NonInteractive -File scripts/start-codemind-serena.ps1 -CheckOnly 2>&1
+          if ($LASTEXITCODE -ne 0 -or -not ($out -match 'CODEMIND_LAUNCHER_PREFLIGHT_PASS')) { throw "PowerShell 7 launcher preflight failed: $out" }
+          Write-Output "PS7_LAUNCHER_PREFLIGHT_PASS"
       - name: Install pinned Serena runtime for actual tool integration
         shell: pwsh
         run: uv sync --extra dev --locked
