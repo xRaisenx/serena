@@ -1,7 +1,7 @@
 /* CODEMIND Serena Mission Control. Same-origin, read-only. No secrets on disk. */
 "use strict";
 (() => {
-  const state = { token: "", snapshot: null, view: "overview", theme: "dark", busy: false };
+  const state = { token: "", snapshot: null, v2: null, view: "overview", theme: "dark", busy: false };
   const byId = id => document.getElementById(id);
   const all = selector => Array.from(document.querySelectorAll(selector));
   const text = (id, value) => { const node = byId(id); if (node) node.textContent = value == null ? "—" : String(value); };
@@ -171,6 +171,8 @@
     text("overview-live", "Authenticated telemetry");
     text("today-display", dateLabel());
     text("last-refresh", "Updated " + new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" }).format(new Date()));
+    text("runtime-provenance", state.v2?.source?.revision_attested ?
+      "BUILD VERIFIED " + state.v2.source.revision?.slice(0, 9) : "REVISION NOT ATTESTED");
     text("hero-title", snapshot.project?.state === "activated" ? "Workspace telemetry is available" : "Serena is reporting — no project active");
     text("hero-desc", "The dashboard is responding. Individual services remain unverified until their own authenticated readiness checks succeed.");
     text("metric-tools", formatNumber(snapshot.tools?.active_count));
@@ -249,6 +251,21 @@
       const data = await response.json();
       if (data.schema !== 1 || data.application !== "CODEMIND Serena") throw new Error("Unexpected dashboard data contract.");
       state.snapshot = data;
+      state.v2 = null;
+      // V1 remains the compatibility API. V2 is evidence enrichment only.
+      // If the v2 API is unavailable, continue displaying observed v1 values
+      // without pretending the installed V2 slice is present.
+      try {
+        const v2response = await fetch("/codemind/api/v2/overview", {
+          method: "GET", credentials: "same-origin", cache: "no-store",
+          headers: { Authorization: "Bearer " + state.token, Accept: "application/json" },
+          signal: controller.signal,
+        });
+        if (v2response.ok) {
+          const v2 = await v2response.json();
+          if (v2.schema === 2 && v2.application === "CODEMIND Serena") state.v2 = v2;
+        }
+      } catch { /* V1 compatibility mode; no inferred V2 health. */ }
       render(data);
       byId("unlock").hidden = true;
       byId("workspace").hidden = false;
@@ -329,6 +346,68 @@
     }
   });
 
+
+  async function routeSkillRequest(event) {
+    event.preventDefault();
+    const input = byId("skill-route-input");
+    const target = byId("skill-route-result");
+    const button = byId("skill-route-submit");
+    const requestText = input.value.trim();
+    if (requestText.length < 3 || requestText.length > 1000) {
+      target.textContent = "Enter a request between 3 and 1,000 characters.";
+      return;
+    }
+    if (!state.token || state.busy) {
+      target.textContent = "Unlock the dashboard and finish the current request first.";
+      return;
+    }
+    button.disabled = true;
+    target.textContent = "Analyzing the active project's installed skill manifests…";
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 9000);
+    try {
+      const response = await fetch("/codemind/api/v2/skills/route", {
+        method: "POST", credentials: "same-origin", cache: "no-store",
+        headers: {
+          Authorization: "Bearer " + state.token,
+          Accept: "application/json", "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ request_text: requestText }),
+        signal: controller.signal,
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          target.textContent = "Operator authorization denied. Lock and reauthenticate.";
+        } else if (response.status === 409) {
+          target.textContent = "No active project. Activate a Serena project before routing.";
+        } else if (response.status === 422) {
+          target.textContent = "Installed skill manifests failed validation; no skill selected.";
+        } else {
+          target.textContent = "Routing is unavailable (HTTP " + response.status + ").";
+        }
+        return;
+      }
+      if (result.schema !== 2 || result.state !== "ROUTED" || result.authorization_granted !== false) {
+        target.textContent = "Invalid or unsafe routing response. Nothing was executed.";
+        return;
+      }
+      const names = Array.isArray(result.selected) ?
+        result.selected.slice(0, 3).map(item => String(item.skill_id) + " (score " + Number(item.score) + ")") : [];
+      target.textContent = names.length ?
+        "Selected: " + names.join(", ") + ". Loaded: 0; executed: 0; permission granted: NO." :
+        "No matching project skill. Loaded: 0; executed: 0; permission granted: NO.";
+    } catch (error) {
+      target.textContent = error.name === "AbortError" ?
+        "Routing timed out; no selection or execution is confirmed." :
+        "Routing request failed; no selection or execution is confirmed.";
+    } finally {
+      clearTimeout(timeout);
+      button.disabled = false;
+    }
+  }
+
+  byId("skill-route-form").addEventListener("submit", routeSkillRequest);
   byId("unlock-form").addEventListener("submit", async event => {
     event.preventDefault();
     const token = byId("operator-token").value;
@@ -337,7 +416,7 @@
     await refresh();
   });
   byId("lock-btn").addEventListener("click", () => {
-    state.token = ""; state.snapshot = null;
+    state.token = ""; state.snapshot = null; state.v2 = null;
     byId("workspace").hidden = true; byId("unlock").hidden = false;
     byId("operator-token").focus(); notify("Session locked; no operator token retained.");
   });
