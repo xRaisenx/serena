@@ -20,7 +20,7 @@
 | Milestone | Owned slices | Evidence required | Status at plan creation |
 |---|---|---|---|
 | M0 Baseline locked | S0 | Current checkout/runtime SHA, v1 tests, observed feature inventory | NOT YET REVALIDATED for V2 |
-| M1 Professional GUI functional | S1 | v1 compatibility, v2 read model, all clickable actions, visual/a11y tests | NOT IMPLEMENTED |
+| M1 Professional GUI functional | S1 | v1 compatibility, v2 read model, all clickable actions, visual/a11y tests | SOURCE STARTED; RUNTIME/GUI NOT VERIFIED |
 | M2 Expert and skills | S2 | Source-backed method catalog, deterministic routing, loaded skill proof | NOT IMPLEMENTED |
 | M3 Debug + FU intelligence | S3 + S4 | Task-scoped anti-loop/guard tests, forecast permission negative tests | NOT IMPLEMENTED |
 | M4 Governed learning | S5 | Sanitized provenance, stage transition and runtime restart readback | NOT IMPLEMENTED |
@@ -116,7 +116,7 @@ Store under the existing CODEMIND repository docs/test artifact convention; do n
 
 ## 7. First bounded work queue
 
-**Next eligible action:** S0 source/runtime census, then S1-A contract-driven dashboard v2 read model. The following are not authority to execute by merely appearing in this plan:
+**Next eligible action:** finish S0 **local source/runtime parity** and prove installed Windows S1-A read-model/route endpoints; S1-A source and targeted tests already exist in the feature branch, but this does not establish live browser acceptance. The following are not authority to execute by merely appearing in this plan:
 
 1. Reconcile feature branch HEAD vs local checkout and current Serena process source.
 2. Establish baseline for overview, skills, tunnel, Commander and existing tests.
