@@ -18,7 +18,7 @@ from flask import Blueprint, abort, jsonify, redirect, request
 from serena.codemind.futures import preview_actions
 from serena.codemind.health import CommanderHealthProbe
 from serena.codemind.learning import FailureGuard
-from serena.codemind.methods import MethodCatalogError, load_method_catalog
+from serena.codemind.methods import MethodCatalogError, load_method_catalog, recommend_method_references
 from serena.codemind.modules import SkillManifestRegistry
 from serena.codemind.planner import SkillRouter
 from serena.codemind.read_model import build_v2_overview
@@ -287,7 +287,8 @@ def register_codemind_routes(app: Any, agent: Any, tool_names: list[str], tool_u
         try:
             registry = SkillManifestRegistry(Path(project.project_root) / ".codemind" / "skills")
             routed = SkillRouter(registry).route(task)
-        except (OSError, ValueError, TypeError):
+            suggestions = recommend_method_references(task)["selected_references"]
+        except (OSError, ValueError, TypeError, MethodCatalogError):
             return jsonify(
                 {
                     "schema": 2,
@@ -305,6 +306,7 @@ def register_codemind_routes(app: Any, agent: Any, tool_names: list[str], tool_u
                 "project": project_status["name"],
                 "mode": routed["mode"],
                 "selected": routed["selected"],
+                "reference_suggestions": suggestions,
                 "loaded": [],
                 "executed": [],
                 "authorization_granted": False,
