@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Authorization, response and read-only contract for the CODEMIND console."""
+
 from __future__ import annotations
 
 import json
@@ -100,4 +101,4 @@ def test_static_console_artifacts_present():
     html = (root / "index.html").read_text(encoding="utf-8")
     assert "https://cdn.jsdelivr.net" not in html
     assert "operator-token" in html
-    assert "data-page=\"security\"" in html
+    assert 'data-page="security"' in html
