@@ -47,8 +47,12 @@ _STAGE_DEFS: tuple[tuple[str, str], ...] = (
 
 
 def preview_actions(
-    request_text: str, *, project_name: str | None, task_bound: bool = False,
-    same_strategy_failures: int = 0, observed_revision: str | None = None,
+    request_text: str,
+    *,
+    project_name: str | None,
+    task_bound: bool = False,
+    same_strategy_failures: int = 0,
+    observed_revision: str | None = None,
 ) -> dict[str, Any]:
     """Return bounded conditional advice. No forecast is executable."""
     intent = classify_intent(request_text)
@@ -56,7 +60,9 @@ def preview_actions(
         raise ValueError("Invalid observed failure count")
     if project_name is not None and (not isinstance(project_name, str) or len(project_name) > 120):
         raise ValueError("Invalid project name")
-    if observed_revision is not None and (not isinstance(observed_revision, str) or not re.fullmatch(r"[0-9a-f]{40,64}", observed_revision)):
+    if observed_revision is not None and (
+        not isinstance(observed_revision, str) or not re.fullmatch(r"[0-9a-f]{40,64}", observed_revision)
+    ):
         raise ValueError("Invalid source revision")
     if not project_name:
         canonical = "ACTIVATE_PROJECT"

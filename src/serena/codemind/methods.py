@@ -33,16 +33,25 @@ def load_method_catalog() -> dict[str, Any]:
             raise MethodCatalogError("Catalog entry must be a record")
         if obj.get("state") != "REFERENCE_ONLY" or any(obj.get(k) is not False for k in ("loaded", "executed", "authorization_granted")):
             raise MethodCatalogError("Reference catalog cannot advertise installed or executable skills")
-        if any(not isinstance(obj.get(k), str) or not (1 <= len(obj[k]) <= 350) for k in ("id", "source_name", "description", "source_path")):
+        if any(
+            not isinstance(obj.get(k), str) or not (1 <= len(obj[k]) <= 350) for k in ("id", "source_name", "description", "source_path")
+        ):
             raise MethodCatalogError("Invalid catalog method metadata")
         if not obj["id"].startswith("codemind-") or obj["id"] in ids:
             raise MethodCatalogError("Duplicate or non-CODEMIND catalog id")
         ids.add(obj["id"])
-        safe.append({
-            "id": obj["id"], "source_name": obj["source_name"], "description": obj["description"],
-            "source_path": obj["source_path"], "state": "REFERENCE_ONLY",
-            "loaded": False, "executed": False, "authorization_granted": False,
-        })
+        safe.append(
+            {
+                "id": obj["id"],
+                "source_name": obj["source_name"],
+                "description": obj["description"],
+                "source_path": obj["source_path"],
+                "state": "REFERENCE_ONLY",
+                "loaded": False,
+                "executed": False,
+                "authorization_granted": False,
+            }
+        )
     return {
         "schema": 2,
         "state": "REFERENCE_ONLY",

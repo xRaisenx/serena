@@ -65,13 +65,16 @@ def test_catalog_authentication(client):
     assert res.headers["Cache-Control"] == "no-store"
 
 
-@pytest.mark.parametrize(("text", "kind"), [
-    ("debug recurring Python errors", "debug"),
-    ("audit repository dependencies", "review"),
-    ("implement new route", "implement"),
-    ("verify regression suite", "validate"),
-    ("examine components", "inspect"),
-])
+@pytest.mark.parametrize(
+    ("text", "kind"),
+    [
+        ("debug recurring Python errors", "debug"),
+        ("audit repository dependencies", "review"),
+        ("implement new route", "implement"),
+        ("verify regression suite", "validate"),
+        ("examine components", "inspect"),
+    ],
+)
 def test_intent_classification(text, kind):
     assert classify_intent(text) == kind
 
@@ -132,13 +135,16 @@ def test_preview_requires_auth_and_same_origin(client):
     assert result["task_binding"] == "UNBOUND"
 
 
-@pytest.mark.parametrize("data", [
-    {},
-    {"request_text": "a"},
-    {"request_text": "fix bug", "authority": True},
-    {"request_text": None},
-    {"request_text": "b" * 1001},
-])
+@pytest.mark.parametrize(
+    "data",
+    [
+        {},
+        {"request_text": "a"},
+        {"request_text": "fix bug", "authority": True},
+        {"request_text": None},
+        {"request_text": "b" * 1001},
+    ],
+)
 def test_preview_rejects_unexpected_payloads(client, data):
     r = client.post("/codemind/api/v2/actions/preview", headers=_AUTH, json=data)
     assert r.status_code in (400, 413)

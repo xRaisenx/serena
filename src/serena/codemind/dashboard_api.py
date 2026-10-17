@@ -323,11 +323,15 @@ def register_codemind_routes(app: Any, agent: Any, tool_names: list[str], tool_u
     def next_action_v2() -> Any:
         # Serena's dashboard is not a task-authorization service. The
         # active project alone cannot prove a bound task/owning actor.
-        return jsonify({
-            "schema": 2, "state": "TASK_SESSION_UNBOUND",
-            "canonical": None, "authorization_granted": False,
-            "reason": "Bind an actual host task and verified owner before canonical execution",
-        }), 409
+        return jsonify(
+            {
+                "schema": 2,
+                "state": "TASK_SESSION_UNBOUND",
+                "canonical": None,
+                "authorization_granted": False,
+                "reason": "Bind an actual host task and verified owner before canonical execution",
+            }
+        ), 409
 
     @bp.post("/v2/actions/preview")
     def preview_actions_v2() -> Any:
