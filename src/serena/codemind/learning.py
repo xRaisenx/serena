@@ -88,15 +88,18 @@ class FailureGuard:
             self._failure(error),
         )
         with self._lock, self._connect() as db:
-            row = db.execute("SELECT fingerprint, consecutive FROM attempts WHERE key=?", (key,)).fetchone()
-            count = row[1] + 1 if row and row[0] == fingerprint else 1
             db.execute(
-                "INSERT INTO attempts(key,fingerprint,consecutive) VALUES(?,?,?) "
-                "ON CONFLICT(key) DO UPDATE SET fingerprint=excluded.fingerprint, "
-                "consecutive=excluded.consecutive, updated_at=CURRENT_TIMESTAMP",
-                (key, fingerprint, count),
+                "INSERT INTO attempts(key,fingerprint,consecutive) VALUES(?,?,1) "
+                "ON CONFLICT(key) DO UPDATE SET "
+                "consecutive=CASE WHEN attempts.fingerprint=excluded.fingerprint "
+                "THEN attempts.consecutive + 1 ELSE 1 END, "
+                "fingerprint=excluded.fingerprint, updated_at=CURRENT_TIMESTAMP",
+                (key, fingerprint),
             )
-            return count
+            row = db.execute("SELECT consecutive FROM attempts WHERE key=?", (key,)).fetchone()
+            if row is None:
+                raise RuntimeError("Failure record was not persisted")
+            return int(row[0])
 
     def success(self, workspace: str, tool_name: str, arguments: dict[str, Any]) -> None:
         with self._lock, self._connect() as db:
