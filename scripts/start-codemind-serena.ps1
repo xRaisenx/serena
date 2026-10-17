@@ -3,7 +3,8 @@
 [CmdletBinding()]
 param(
     [string]$ProjectPath = "",
-    [ValidateRange(1024, 65535)][int]$McpPort = 8765
+    [ValidateRange(1024, 65535)][int]$McpPort = 8765,
+    [switch]$CheckOnly
 )
 $ErrorActionPreference = 'Stop'
 $repositoryRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
@@ -35,14 +36,26 @@ if ([string]::IsNullOrWhiteSpace($env:CODEMIND_DASHBOARD_TOKEN)) {
     if (Test-Path -LiteralPath $tokenFile) {
         $env:CODEMIND_DASHBOARD_TOKEN = [IO.File]::ReadAllText($tokenFile).Trim()
     } else {
-        $env:CODEMIND_DASHBOARD_TOKEN = [Convert]::ToHexString(
-            [Security.Cryptography.RandomNumberGenerator]::GetBytes(32)
-        )
+        # Works on Windows PowerShell 5.1 (.NET Framework) and PowerShell 7+.
+        # The static RandomNumberGenerator.GetBytes(int) and Convert.ToHexString
+        # APIs are unavailable on some supported runtimes.
+        $tokenBytes = New-Object byte[] 32
+        $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+        try {
+            $rng.GetBytes($tokenBytes)
+        } finally {
+            $rng.Dispose()
+        }
+        $env:CODEMIND_DASHBOARD_TOKEN = ([BitConverter]::ToString($tokenBytes)).Replace('-', '')
         [IO.File]::WriteAllText($tokenFile, $env:CODEMIND_DASHBOARD_TOKEN, [Text.UTF8Encoding]::new($false))
     }
     Write-Host ('Dashboard operator token is stored in an ACL-restricted file: ' + $tokenFile)
 }
 if ($env:CODEMIND_DASHBOARD_TOKEN.Length -lt 32) { throw 'Dashboard token must be at least 32 characters.' }
+if ($CheckOnly) {
+    Write-Host ('CODEMIND_LAUNCHER_PREFLIGHT_PASS; PowerShell=' + $PSVersionTable.PSVersion.ToString())
+    return
+}
 Write-Host 'CODEMIND Serena: Starting one local MCP process. No Commander restart will occur.'
 Write-Host 'The dashboard URL is reported by Serena startup logs. The MCP endpoint port is not the dashboard port.'
 Push-Location $repositoryRoot
