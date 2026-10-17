@@ -12,8 +12,8 @@ import hmac
 import json
 import secrets
 import time
-from dataclasses import dataclass
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Protocol
 from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
