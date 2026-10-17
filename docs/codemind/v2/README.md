@@ -14,6 +14,7 @@
 5. [04-DELIVERY-AND-ACCEPTANCE.md](04-DELIVERY-AND-ACCEPTANCE.md) — milestone gates, C01–C30 validation, incident/runbook, resource budgets and release-level proof.
 6. [05-NMBV-TO-CODEMIND-CROSSWALK.md](05-NMBV-TO-CODEMIND-CROSSWALK.md) — exact NMBV 25-skill source names/paths, proposed CODEMIND method translations, native coordinator mappings, CODEMIND-100 metadata, FU and independent Commander.
 7. [06-UI-API-BINDINGS.json](06-UI-API-BINDINGS.json) — machine-readable v1/v2 route and frontend action mapping with explicit feature availability.
+8. [07-WOLF-CODEMIND-CONTEXT7-GOVERNANCE.md](07-WOLF-CODEMIND-CONTEXT7-GOVERNANCE.md) — governance, expert-reference boundaries, pinned Flask/MCP docs, live 26-skill acceptance and remaining falsifiers.
 8. [07-S1A-EVIDENCE.md](07-S1A-EVIDENCE.md) — current source tests and independent Windows sidecar HTTP verification, with the active primary-runtime parity explicitly unverified.
 
 ## Immediate work directive
