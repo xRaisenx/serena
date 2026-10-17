@@ -154,3 +154,12 @@ def test_remove_key_blocked_when_client_running(ctl):
     ctl._process = SimpleNamespace(poll=lambda: None)
     with pytest.raises(MODULE.TunnelControlError):
         ctl.remove_key()
+
+
+@pytest.mark.skipif(MODULE.os.name != "nt", reason="Real DPAPI only exists on Windows")
+def test_real_windows_dpapi_roundtrip():
+    key = b"sk-proj-" + b"r" * 80
+    encrypted = MODULE._dpapi(key, decrypt=False)
+    assert encrypted != key
+    assert key not in encrypted
+    assert MODULE._dpapi(encrypted, decrypt=True) == key
