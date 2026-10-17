@@ -239,14 +239,20 @@
     const q = byId("method-search").value.trim().toLowerCase();
     const selected = data.methods.filter(item =>
       [item.id, item.description, item.source_name].some(x => String(x || "").toLowerCase().includes(q)));
-    text("method-count", selected.length + " OF " + data.count + " REFERENCES");
+    const skillTelemetryReady = state.snapshot?.skills?.state === "available" && Array.isArray(state.snapshot.skills.items);
+    const installedIds = new Set(skillTelemetryReady ? state.snapshot.skills.items.map(item => item.id) : []);
+    const installedCount = data.methods.filter(item => installedIds.has(item.id)).length;
+    text("method-count", selected.length + " OF " + data.count + " REFERENCES • " +
+      (skillTelemetryReady ? installedCount + " INSTALLED" : "INSTALLATION UNVERIFIED"));
     if (!selected.length) {
       node.append(element("p", "empty-state", "No matching reference methods."));
       return;
     }
     for (const method of selected) {
       const card = element("article", "method-reference");
-      card.append(element("span", "tool-type", "REFERENCE ONLY • NOT INSTALLED"),
+      const installation = !skillTelemetryReady ? "INSTALLATION UNVERIFIED" :
+        installedIds.has(method.id) ? "PROJECT SKILL INSTALLED • NOT EXECUTED" : "REFERENCE ONLY • NOT INSTALLED";
+      card.append(element("span", "tool-type", installation),
         element("strong", "", method.id),
         element("p", "", method.description),
         element("small", "method-source", "Origin: " + method.source_name));
