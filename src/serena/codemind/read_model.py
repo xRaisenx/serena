@@ -73,7 +73,8 @@ def build_v2_overview(v1: dict[str, Any], *, observed_at: str | None = None) -> 
         "capabilities": {
             "skill_router": "AVAILABLE" if skills.get("state") == "available" else "UNVERIFIED",
             "native_learning_promotion": "NOT_IMPLEMENTED",
-            "fu_20_candidate_horizon": "NOT_IMPLEMENTED",
+            "fu_20_candidate_horizon": "AVAILABLE_ADVISORY",
+            "method_reference_catalog": "AVAILABLE_REFERENCE_ONLY",
             "commander_dual_watchdog": "UNVERIFIED",
             "codemind_100_expert_runtime": "NOT_IMPLEMENTED",
             "chatgpt_remote_acceptance": "VERIFIED" if tunnel.get("connection_verified") is True else "UNVERIFIED",
