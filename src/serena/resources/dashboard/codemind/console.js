@@ -1,4 +1,4 @@
-/* CODEMIND Serena Mission Control. Same-origin, read-only. No secrets on disk. */
+/* Secucko SCC Mission Control. Existing authenticated CODEMIND APIs remain unchanged. */
 "use strict";
 (() => {
   const state = { token: "", snapshot: null, v2: null, catalog: null, view: "overview", theme: "dark", busy: false, epoch: 0 };
@@ -71,7 +71,7 @@
   function categorizeTool(name) {
     if (/symbol|reference|implementation|declaration|diagnostic|language_server/.test(name)) return "SEMANTIC INTELLIGENCE";
     if (/memory|onboarding/.test(name)) return "MEMORY";
-    if (/codemind|skill/.test(name)) return "CODEMIND EXTENSION";
+    if (/codemind|skill/.test(name)) return "SCC ENGINE";
     if (/file|dir|search|pattern|content/.test(name)) return "FILES & SEARCH";
     if (/execute|shell|task/.test(name)) return "EXECUTION";
     return "SERENA CORE";
@@ -379,7 +379,7 @@
           byId("workspace").hidden = true;
           byId("unlock").hidden = false;
           byId("operator-token").focus();
-          throw new Error("Authentication rejected. Use a separate CODEMIND dashboard token, not your OpenAI API key.");
+          throw new Error("Authentication rejected. Use your SCC operator token, not an OpenAI API key.");
         }
         throw new Error("Runtime returned HTTP " + response.status + ".");
       }
@@ -599,7 +599,7 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "codemind-observations-" + new Date().toISOString().slice(0, 10) + ".json";
+    a.download = "scc-observations-" + new Date().toISOString().slice(0, 10) + ".json";
     document.body.append(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     notify("Exported the observed runtime snapshot. No API or dashboard tokens were included.");
