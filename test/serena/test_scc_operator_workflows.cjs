@@ -92,6 +92,18 @@ test('tunnel client readiness stays distinct from a recent MCP consumer proof', 
   assert.match(js, /\/codemind\/api\/tunnel\/acceptance\/challenge/);
 });
 
+test('SCC methods load and execute an explicitly selected read-only Serena semantic step', () => {
+  for (const id of ['skill-inspect-form', 'skill-inspect-path', 'skill-inspect-symbol',
+    'skill-inspect-submit', 'skill-inspect-result']) {
+    assert.ok(html.includes('id="' + id + '"'), id);
+  }
+  assert.match(js, /\/codemind\/api\/v2\/skills\/inspect/);
+  assert.match(js, /payload\.executed\[0\]\.tool !== "find_symbol"/);
+  assert.match(js, /Loaded method instructions:/);
+  assert.match(js, /Noetic Fleet workers: NOT RUNNING/);
+  assert.match(js, /result\.skill_context\?\.next_read_only_tool/);
+});
+
 test('responsive about and operator widgets have small-screen layout', () => {
   assert.match(css, /\.scc-action-row/);
   assert.match(css, /\.about-steps/);

@@ -7,7 +7,9 @@ No process mutation, shell execution, token persistence or remote health bypass.
 from __future__ import annotations
 
 import hmac
+import json
 import os
+import re
 import sqlite3
 from pathlib import Path
 from typing import Any
@@ -307,6 +309,10 @@ def register_codemind_routes(app: Any, agent: Any, tool_names: list[str], tool_u
             registry = SkillManifestRegistry(Path(project.project_root) / ".codemind" / "skills")
             routed = SkillRouter(registry).route(task)
             suggestions = recommend_method_references(task)["selected_references"]
+            manifests = {skill["id"]: skill for skill in registry.list_skills()}
+            playbooks = [
+                {"skill_id": item["skill_id"], "instructions": manifests[item["skill_id"]]["instructions"]} for item in routed["selected"]
+            ]
         except (OSError, ValueError, TypeError, MethodCatalogError):
             return jsonify(
                 {
@@ -321,13 +327,83 @@ def register_codemind_routes(app: Any, agent: Any, tool_names: list[str], tool_u
         return jsonify(
             {
                 "schema": 2,
-                "state": "ROUTED",
+                "state": "ROUTED" if playbooks else "NO_MATCHING_SKILL",
                 "project": project_status["name"],
                 "mode": routed["mode"],
                 "selected": routed["selected"],
                 "reference_suggestions": suggestions,
-                "loaded": [],
+                "loaded": [item["skill_id"] for item in playbooks],
+                "skill_playbooks": playbooks,
                 "executed": [],
+                "noetic_fleet": "NOT_RUNNING",
+                "authorization_granted": False,
+            }
+        ), 200 if playbooks else 409
+
+    @bp.post("/v2/skills/inspect")
+    def inspect_routed_symbol_v2() -> Any:
+        """Apply loaded skill methods to one explicit, read-only Serena symbol lookup."""
+        require_same_origin()
+        body = request.get_json(silent=True)
+        if not isinstance(body, dict) or set(body) != {"request_text", "relative_path", "symbol"}:
+            abort(400)
+        task, relative_path, symbol = body["request_text"], body["relative_path"], body["symbol"]
+        if not isinstance(task, str) or not 3 <= len(task.strip()) <= 1000:
+            abort(400)
+        if not isinstance(relative_path, str) or not 3 <= len(relative_path) <= 240:
+            abort(400)
+        if not isinstance(symbol, str) or not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_./-]{0,95}", symbol):
+            abort(400)
+        path = Path(relative_path)
+        if path.is_absolute() or any(part in (".", "..") for part in path.parts):
+            abort(400)
+        if path.parts[0] not in ("src", "test") or path.suffix.lower() not in (".py", ".js", ".ts", ".tsx"):
+            abort(400)
+        project, status = project_info()
+        if project is None:
+            return jsonify({"schema": 2, "state": "NO_ACTIVE_PROJECT", "executed": [], "authorization_granted": False}), 409
+        root = Path(project.project_root).resolve()
+        target = root / path
+        if not target.is_file() or any(part.is_symlink() for part in (root / Path(*path.parts[:i]) for i in range(1, len(path.parts) + 1))):
+            abort(400)
+        if not target.resolve().is_relative_to(root):
+            abort(400)
+        try:
+            registry = SkillManifestRegistry(root / ".codemind" / "skills")
+            selection = SkillRouter(registry).route(task)["selected"]
+            manifests = {item["id"]: item for item in registry.list_skills()}
+            loaded = [{"skill_id": item["skill_id"], "instructions": manifests[item["skill_id"]]["instructions"]} for item in selection]
+            if not loaded:
+                return jsonify({"schema": 2, "state": "NO_MATCHING_SKILL", "executed": [], "authorization_granted": False}), 409
+            if "find_symbol" not in agent.get_active_tool_names():
+                return jsonify({"schema": 2, "state": "SEMANTIC_TOOL_DISABLED", "executed": [], "authorization_granted": False}), 409
+            if agent.get_active_project() is not project:
+                return jsonify({"schema": 2, "state": "PROJECT_CHANGED", "executed": [], "authorization_granted": False}), 409
+            tool = agent.get_tool_by_name("find_symbol")
+            result = tool.apply(
+                name_path_pattern=symbol,
+                relative_path=path.as_posix(),
+                include_body=False,
+                max_matches=10,
+                max_answer_chars=4500,
+            )
+            if not isinstance(result, str) or len(result) > 5000:
+                raise ValueError("Unbounded semantic result")
+            matches = json.loads(result)
+            if not isinstance(matches, list):
+                raise ValueError("Invalid Serena symbol lookup result")
+        except (OSError, ValueError, TypeError, KeyError):
+            return jsonify({"schema": 2, "state": "INSPECTION_FAILED", "executed": [], "authorization_granted": False}), 422
+        return jsonify(
+            {
+                "schema": 2,
+                "state": "INSPECTED",
+                "project": status["name"],
+                "selected": selection,
+                "loaded": loaded,
+                "executed": [{"tool": "find_symbol", "mode": "READ_ONLY", "path": path.as_posix(), "symbol": symbol}],
+                "symbols": matches,
+                "noetic_fleet": "NOT_RUNNING",
                 "authorization_granted": False,
             }
         )
@@ -367,6 +443,20 @@ def register_codemind_routes(app: Any, agent: Any, tool_names: list[str], tool_u
         project, project_status = project_info()
         # Do not infer a task/session binding from an activated project.
         result = preview_actions(task, project_name=project_status["name"] if project is not None else None)
+        if project is not None:
+            try:
+                registry = SkillManifestRegistry(Path(project.project_root) / ".codemind" / "skills")
+                selected = SkillRouter(registry).route(task)["selected"]
+                result["skill_context"] = {
+                    "state": "METHODS_PREPARED" if selected else "NO_MATCHING_SKILL",
+                    "selected": [item["skill_id"] for item in selected],
+                    "next_read_only_tool": "find_symbol" if selected and "find_symbol" in agent.get_active_tool_names() else None,
+                    "noetic_fleet": "NOT_RUNNING",
+                }
+            except (OSError, ValueError, TypeError):
+                result["skill_context"] = {"state": "VALIDATION_FAILED", "selected": [], "noetic_fleet": "NOT_RUNNING"}
+        else:
+            result["skill_context"] = {"state": "NO_ACTIVE_PROJECT", "selected": [], "noetic_fleet": "NOT_RUNNING"}
         return jsonify(result)
 
     app.register_blueprint(bp, url_prefix="/codemind/api")

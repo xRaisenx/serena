@@ -95,8 +95,8 @@
         </section>
         <section class="page-section" data-page="tools" aria-labelledby="tools-heading"><div class="page-heading"><div><div class="eyebrow">SEMANTIC CORE</div><h1 id="tools-heading">Tool registry<span class="heading-dot">.</span></h1><p>Discover the tools exposed by the active Serena session.</p></div><span class="count-tag" id="tools-count">—</span></div><div class="search-bar"><label for="tool-search" class="sr-only">Search tools</label><span aria-hidden="true">⌕</span><input id="tool-search" placeholder="Filter by tool name, capability or action…" type="search"><button class="search-clear" id="clear-tools" type="button">Clear</button></div><div class="panel"><div class="panel-head"><h3>Available operations</h3><span class="panel-tag">LIVE REGISTRY</span></div><div id="tools-list" class="tool-grid empty-state">Connect to load tools.</div><p class="settings-description">Use a tool card to copy its exact live registry name for your Serena client. This does not execute it.</p></div></section>
         <section class="page-section" data-page="skills" aria-labelledby="skills-heading"><div class="page-heading"><div><div class="eyebrow">DECLARATIVE INTELLIGENCE</div><h1 id="skills-heading">Skills & routing<span class="heading-dot">.</span></h1><p>Versioned skills loaded from the active project's validated JSON manifests.</p></div></div><div class="panel"><div class="panel-head"><h3>Enabled skill registry</h3><span id="skill-state" class="panel-tag">UNVERIFIED</span></div><div id="skills-list" class="skill-grid empty-state">No verified skills loaded.</div></div><div class="panel" style="margin-top:18px">
-            <div class="panel-head"><div><p class="panel-eyebrow">TASK-AWARE SELECTION</p><h3>Route an engineering task</h3></div><span class="panel-tag">ADVISORY · NO EXECUTION</span></div>
-            <p class="settings-description">The active Serena project must contain enabled project skill manifests. Routing selects matching methods without loading skills or authorizing tools.</p>
+            <div class="panel-head"><div><p class="panel-eyebrow">TASK-AWARE SELECTION</p><h3>Route an engineering task</h3></div><span class="panel-tag">METHOD LOADING + CONTROLLED INSPECTION</span></div>
+            <p class="settings-description">The active Serena project must contain enabled project skill manifests. Routing loads the matching SCC method instructions. An explicit read-only symbol lookup can apply them through Serena's real semantic tools; no autonomous Noetic Fleet is started.</p>
             <form id="skill-route-form" class="route-form">
               <label for="skill-route-input">Engineering request</label>
               <textarea id="skill-route-input" rows="3" minlength="3" maxlength="1000" required placeholder="Describe a bug, source review, test or engineering task"></textarea>
@@ -104,7 +104,15 @@
               <button class="button secondary" type="button" id="skill-packet-next">Route + build action packet →</button>
             </form>
             <div id="skill-route-result" class="result-note" role="status" aria-live="polite">Enter a task to match installed SCC engineering methods.</div>
-            <p class="settings-description">Combines live installed-skill routing with a bounded evidence-gated forecast. No command execution or new permission is granted.</p>
+            <form id="skill-inspect-form" class="route-form" style="margin-top:16px">
+              <label for="skill-inspect-path">Project-relative source file to inspect (src/ or test/)</label>
+              <input id="skill-inspect-path" type="text" required maxlength="240" value="src/serena/codemind/planner.py" autocomplete="off" spellcheck="false">
+              <label for="skill-inspect-symbol">Serena symbol name/path</label>
+              <input id="skill-inspect-symbol" type="text" required maxlength="96" value="SkillRouter/route" autocomplete="off" spellcheck="false">
+              <button type="submit" class="button primary" id="skill-inspect-submit">Run read-only Serena symbol inspection</button>
+            </form>
+            <div id="skill-inspect-result" class="result-note" role="status" aria-live="polite">To apply a routed skill, choose an actual source file and symbol and run inspection. The result will show which tool executed.</div>
+            <p class="settings-description">Shows selected and actually loaded skill instructions. Semantic inspection runs only after you press the button and uses Serena's read-only find_symbol tool. No worker, source mutation, or new permission is granted.</p>
           </div>
           <article class="panel" style="margin-top:18px" aria-labelledby="method-heading">
             <div class="panel-head"><div><p class="panel-eyebrow">SOURCE-INDEXED CAPABILITIES</p><h3 id="method-heading">SCC method catalog</h3></div><span id="method-count" class="panel-tag">REFERENCE ONLY</span></div>

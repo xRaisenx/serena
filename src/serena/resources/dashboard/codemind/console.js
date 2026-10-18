@@ -349,6 +349,11 @@
       ["Evidence gate", result.canonical.evidence_gate],
       ["Task binding", result.task_binding],
       ["Selected intent", result.intent],
+      ["Installed SCC methods", Array.isArray(result.skill_context?.selected) && result.skill_context.selected.length ?
+        result.skill_context.selected.join(", ") : "No task-matching project skill"],
+      ["First real read-only action", result.skill_context?.next_read_only_tool === "find_symbol" ?
+        "Skills & routing → inspect a project-relative source symbol" : "Unavailable until project methods and Serena tools are verified"],
+      ["Noetic Fleet", result.skill_context?.noetic_fleet || "NOT_RUNNING"],
       ["Execution authorization", "NOT GRANTED"],
     ]);
     const renderList = (node, items) => {
@@ -585,7 +590,9 @@
         if (response.status === 401 || response.status === 403) {
           target.textContent = "Operator authorization denied. Lock and reauthenticate.";
         } else if (response.status === 409) {
-          target.textContent = "No active project. Activate a Serena project before routing.";
+          target.textContent = result.state === "NO_MATCHING_SKILL" ?
+            "This Serena project has no matching enabled skill. Check the active project and install applicable SCC manifests." :
+            "No active project. Activate the intended Serena project before routing.";
         } else if (response.status === 422) {
           target.textContent = "Installed skill manifests failed validation; no skill selected.";
         } else {
@@ -597,8 +604,15 @@
         target.textContent = "Invalid or unsafe routing response. Nothing was executed.";
         return;
       }
+      if (!Array.isArray(result.loaded) || !Array.isArray(result.skill_playbooks) ||
+          result.skill_playbooks.some(item => !result.loaded.includes(item.skill_id) ||
+            typeof item.instructions !== "string")) {
+        target.textContent = "Skill loading proof is missing; nothing was executed.";
+        return;
+      }
       state.skillRoute = {request_text: requestText, selected: Array.isArray(result.selected) ?
-        result.selected.slice(0,3).map(item => ({skill_id:String(item.skill_id),score:Number(item.score)})) : []};
+        result.selected.slice(0,3).map(item => ({skill_id:String(item.skill_id),score:Number(item.score)})) : [],
+        loaded: result.loaded.slice(0,3)};
       const names = Array.isArray(result.selected) ?
         result.selected.slice(0, 3).map(item => String(item.skill_id) + " (score " + Number(item.score) + ")") : [];
       const referenceNames = Array.isArray(result.reference_suggestions) ?
@@ -609,7 +623,9 @@
           "No matching installed project skill. ") +
         (referenceNames.length ? "Method references (not installed): " + referenceNames.join(", ") + ". " :
           "No matching reference method. ") +
-        "Loaded: 0; executed: 0; permission granted: NO.";
+        "Loaded: " + result.loaded.length + " method instruction(s). Executed: 0. Fleet workers running: NO. " +
+        "Use the source-symbol form below for a real read-only Serena tool call.\n\n" +
+        result.skill_playbooks.map(item => item.skill_id + ": " + item.instructions).join("\n\n");
     } catch (error) {
       target.textContent = error.name === "AbortError" ?
         "Routing timed out; no selection or execution is confirmed." :
@@ -620,6 +636,68 @@
     }
   }
 
+
+  async function inspectSkillRequest(event) {
+    event.preventDefault();
+    const requestText = byId("skill-route-input").value.trim();
+    const relativePath = byId("skill-inspect-path").value.trim();
+    const symbol = byId("skill-inspect-symbol").value.trim();
+    const target = byId("skill-inspect-result");
+    const button = byId("skill-inspect-submit");
+    if (!state.token || state.busy || requestText.length < 3 || requestText.length > 1000 ||
+        !/^[A-Za-z_][A-Za-z0-9_./-]{0,95}$/.test(symbol) || !relativePath) {
+      target.textContent = "Unlock SCC, enter an engineering request, source path and valid symbol.";
+      return;
+    }
+    if (!state.skillRoute || state.skillRoute.request_text !== requestText) {
+      await routeSkillRequest({preventDefault() {}});
+      if (!state.skillRoute) {
+        target.textContent = "Skill routing must succeed before semantic inspection.";
+        return;
+      }
+    }
+    const currentToken = state.token, currentEpoch = state.epoch;
+    button.disabled = true;
+    target.textContent = "Running one explicitly requested read-only Serena find_symbol call…";
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 14000);
+    try {
+      const response = await fetch("/codemind/api/v2/skills/inspect", {
+        method: "POST", credentials: "same-origin", cache: "no-store",
+        headers: {Authorization: "Bearer " + currentToken, "Content-Type": "application/json"},
+        body: JSON.stringify({request_text: requestText, relative_path: relativePath, symbol}),
+        signal: controller.signal,
+      });
+      const payload = await response.json();
+      if (currentToken !== state.token || currentEpoch !== state.epoch) return;
+      if (!response.ok || payload.state !== "INSPECTED" ||
+          payload.authorization_granted !== false || !Array.isArray(payload.symbols) ||
+          !Array.isArray(payload.loaded) || !Array.isArray(payload.executed) ||
+          payload.executed.length !== 1 || payload.executed[0].tool !== "find_symbol") {
+        target.textContent = "Semantic inspection blocked or failed (" + (payload.state || response.status) +
+          "). No source was modified.";
+        return;
+      }
+      const located = payload.symbols.map(item => String(item.name_path || "?") + " @ " +
+        String(item.relative_path || relativePath) + ":" +
+        String(item.body_location?.start_line ?? "?")).join("; ");
+      target.textContent = "LIVE READ-ONLY SERENA TOOL: find_symbol. Loaded method instructions: " +
+        payload.loaded.map(item => String(item.skill_id)).join(", ") +
+        ". Symbols found: " + payload.symbols.length + ". " +
+        (located || "No matching symbols; refine the name or inspect the actual source.") +
+        ". Noetic Fleet workers: NOT RUNNING. Source changes: NONE.";
+    } catch (error) {
+      if (currentToken === state.token && currentEpoch === state.epoch) {
+        target.textContent = error.name === "AbortError" ?
+          "Semantic inspection timed out; no execution was confirmed." :
+          "Serena semantic inspection failed; no source was modified.";
+      }
+    } finally {
+      clearTimeout(timeout);
+      button.disabled = false;
+    }
+  }
+  byId("skill-inspect-form").addEventListener("submit", inspectSkillRequest);
 
   byId("operator-actions").addEventListener("click", event => {
     const button = event.target.closest("[data-action-view]");

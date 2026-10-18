@@ -152,7 +152,8 @@ def test_routing_real_project_manifests_and_no_execution(monkeypatch, tmp_path):
     payload = response.get_json()
     assert payload["state"] == "ROUTED"
     assert payload["selected"][0]["skill_id"] == "deterministic-debugging"
-    assert payload["loaded"] == []
+    assert payload["loaded"] == ["deterministic-debugging"]
+    assert payload["skill_playbooks"] == [{"skill_id": "deterministic-debugging", "instructions": "Inspect source"}]
     assert payload["executed"] == []
     assert payload["authorization_granted"] is False
 
@@ -180,6 +181,89 @@ def test_cross_origin_cannot_route(client):
         json={"request_text": "debug recurring errors"},
     )
     assert response.status_code == 403
+
+
+def test_routed_skill_method_runs_bounded_serena_symbol_lookup(monkeypatch, tmp_path):
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "runtime"))
+    skills = tmp_path / ".codemind" / "skills"
+    skills.mkdir(parents=True)
+    (skills / "debug.json").write_text(
+        json.dumps(
+            {
+                "id": "deterministic-debugging",
+                "version": "1",
+                "description": "reproduce and debug errors",
+                "instructions": "Inspect source, form a falsifier, and test it",
+                "enabled": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+    source = tmp_path / "src" / "domain"
+    source.mkdir(parents=True)
+    (source / "planner.py").write_text("class Planner: pass\n", encoding="utf-8")
+    observed = []
+
+    class FakeSymbolTool:
+        def apply(self, **kwargs):
+            observed.append(kwargs)
+            return json.dumps(
+                [
+                    {
+                        "name_path": "Planner",
+                        "relative_path": "src/domain/planner.py",
+                        "body_location": {"start_line": 0, "end_line": 0},
+                    }
+                ]
+            )
+
+    agent = FakeAgent(FakeProject(tmp_path))
+    agent.get_tool_by_name = lambda name: FakeSymbolTool() if name == "find_symbol" else None
+    client = build_client(monkeypatch, agent)
+    result = client.post(
+        "/codemind/api/v2/skills/inspect",
+        headers=_TOKEN,
+        json={
+            "request_text": "debug recurring errors",
+            "relative_path": "src/domain/planner.py",
+            "symbol": "Planner",
+        },
+    )
+    assert result.status_code == 200
+    payload = result.get_json()
+    assert payload["state"] == "INSPECTED"
+    assert payload["loaded"][0]["instructions"] == "Inspect source, form a falsifier, and test it"
+    assert payload["symbols"][0]["name_path"] == "Planner"
+    assert payload["executed"] == [{"tool": "find_symbol", "mode": "READ_ONLY", "path": "src/domain/planner.py", "symbol": "Planner"}]
+    assert payload["authorization_granted"] is False
+    assert payload["noetic_fleet"] == "NOT_RUNNING"
+    assert observed == [
+        {
+            "name_path_pattern": "Planner",
+            "relative_path": "src/domain/planner.py",
+            "include_body": False,
+            "max_matches": 10,
+            "max_answer_chars": 4500,
+        }
+    ]
+    for path in ("../secret.py", "src/../secret.py", ".codemind/skills/debug.json"):
+        denied = client.post(
+            "/codemind/api/v2/skills/inspect",
+            headers=_TOKEN,
+            json={"request_text": "debug recurring errors", "relative_path": path, "symbol": "Planner"},
+        )
+        assert denied.status_code == 400
+    assert len(observed) == 1
+
+
+def test_project_without_skills_cannot_start_semantic_fleet(monkeypatch, tmp_path):
+    agent = FakeAgent(FakeProject(tmp_path))
+    agent.get_tool_by_name = lambda name: pytest.fail("Semantic tool called without installed project skills")
+    client = build_client(monkeypatch, agent)
+    response = client.post("/codemind/api/v2/skills/route", headers=_TOKEN, json={"request_text": "debug recurring errors"})
+    assert response.status_code == 409
+    assert response.get_json()["state"] == "NO_MATCHING_SKILL"
+    assert response.get_json()["loaded"] == []
 
 
 def test_v1_overview_schema_unchanged(client):
