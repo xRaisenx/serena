@@ -68,13 +68,18 @@
     if (name === "skills") loadMethodCatalog();
   }
 
+  function projectDisplayName(name) {
+    const actual = typeof name === "string" ? name.trim() : "";
+    return actual.toLowerCase() === "serena" ? "SCC workspace" : actual;
+  }
+
   function categorizeTool(name) {
     if (/symbol|reference|implementation|declaration|diagnostic|language_server/.test(name)) return "SEMANTIC INTELLIGENCE";
     if (/memory|onboarding/.test(name)) return "MEMORY";
     if (/codemind|skill/.test(name)) return "SCC ENGINE";
     if (/file|dir|search|pattern|content/.test(name)) return "FILES & SEARCH";
     if (/execute|shell|task/.test(name)) return "EXECUTION";
-    return "SERENA CORE";
+    return "SCC SEMANTIC CORE";
   }
 
 
@@ -99,7 +104,7 @@
     if (!node) return;
     node.replaceChildren();
     const missing = [];
-    if (snapshot.project?.state !== "activated") missing.push(["Activate a Serena project", "tools", "No project is activated."]);
+    if (snapshot.project?.state !== "activated") missing.push(["Activate an SCC workspace", "tools", "No project is activated."]);
     if (snapshot.commander?.ready !== true || snapshot.commander?.authenticated !== true)
       missing.push(["Verify Commander peer", "commander", "Independent Commander health has not been authenticated."]);
     if (snapshot.tunnel?.connection_verified !== true)
@@ -159,7 +164,7 @@
     if (!items.length) {
       node.append(element("p", "empty-state",
         snapshot.skills?.state === "no_project" ? "Activate a project to discover its .codemind/skills manifests." :
-        snapshot.skills?.state === "validation_failed" ? "Skill manifests failed validation. Inspect configuration in Serena." :
+        snapshot.skills?.state === "validation_failed" ? "Skill manifests failed validation. Inspect SCC workspace configuration." :
         "No enabled skills are reported for this project."));
       return;
     }
@@ -203,9 +208,9 @@
     const tunnelReady = tunnel.managed_process_running === true && tunnel.client_ready === true && tunnel.health === "ready";
     const ledger = [
       ["Dashboard authentication", "Valid operator token accepted on loopback", "PASS", "good"],
-      ["Serena live dashboard API", "Authenticated response from the runtime", "PASS", "good"],
+      ["SCC authenticated dashboard API", "Authenticated response from the runtime", "PASS", "good"],
       ["Active project", snapshot.project?.name || "Project not activated", snapshot.project?.state === "activated" ? "OBSERVED" : "NOT ACTIVE", snapshot.project?.state === "activated" ? "good" : "warn"],
-      ["Semantic registry", "Names provided by the active Serena toolset", Array.isArray(snapshot.tools?.active) ? "OBSERVED" : "UNVERIFIED", Array.isArray(snapshot.tools?.active) ? "good" : "warn"],
+      ["Semantic registry", "Names provided by the active SCC toolset", Array.isArray(snapshot.tools?.active) ? "OBSERVED" : "UNVERIFIED", Array.isArray(snapshot.tools?.active) ? "good" : "warn"],
       ["Declarative skill validation", skills.state || "No project data", skills.state === "available" ? "OBSERVED" : "UNVERIFIED", skills.state === "available" ? "good" : "warn"],
       ["Persistent failure database", "Strategy fingerprint counters", learning.state === "available" ? "OBSERVED" : "UNVERIFIED", learning.state === "available" ? "good" : "warn"],
       ["Commander process", commander.processes?.length ? commander.processes.length + " process(es) found" : "No local process observation", commander.processes?.length ? "PRESENT" : "UNVERIFIED", commander.processes?.length ? "good" : "warn"],
@@ -226,7 +231,7 @@
     text("last-refresh", "Updated " + new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" }).format(new Date()));
     text("runtime-provenance", state.v2?.source?.revision_attested ?
       "BUILD VERIFIED " + state.v2.source.revision?.slice(0, 9) : "REVISION NOT ATTESTED");
-    text("hero-title", snapshot.project?.state === "activated" ? "Workspace telemetry is available" : "Serena is reporting — no project active");
+    text("hero-title", snapshot.project?.state === "activated" ? "Workspace telemetry is available" : "SCC engine reporting — no workspace active");
     text("hero-desc", "The dashboard is responding. Individual services remain unverified until their own authenticated readiness checks succeed.");
     text("metric-tools", formatNumber(snapshot.tools?.active_count));
     text("metric-tools-note", formatNumber(snapshot.tools?.registered_count) + " names registered by engine");
@@ -237,7 +242,7 @@
     text("learn-blocked", formatNumber(snapshot.learning?.blocked_strategies));
     text("learning-state", phrase(snapshot.learning?.state).toUpperCase());
     text("nav-tool-count", formatNumber(snapshot.tools?.active_count));
-    text("topo-serena", snapshot.project?.name ? "Project: " + snapshot.project.name : "Serena dashboard API responding");
+    text("topo-serena", snapshot.project?.name ? "Workspace: " + projectDisplayName(snapshot.project.name) : "SCC engine reporting");
     setIndicator("status-serena", "Reporting", "good");
     const peer = snapshot.commander || {};
     text("topo-commander", peer.peer_status === "ready" ? "Authenticated MCP peer" : "Peer: " + phrase(peer.peer_status));
@@ -248,9 +253,9 @@
       tunnelReady ? "SCC tunnel client ready; consumer proof pending" : "Tunnel client not verified ready");
     setIndicator("status-tunnel", tunnelReady ? "Client ready" : "Unverified", tunnelReady ? "good" : "warn");
     details("workspace-details", [
-      ["Project", snapshot.project?.name || "None activated"],
+      ["Workspace", projectDisplayName(snapshot.project?.name) || "None activated"],
       ["Languages", snapshot.project?.languages?.join(", ") || "Not reported"],
-      ["Serena version", snapshot.serena_version],
+      ["SCC engine version", snapshot.serena_version],
       ["Context", snapshot.context],
     ]);
     details("commander-details", [
@@ -352,7 +357,7 @@
       ["Installed SCC methods", Array.isArray(result.skill_context?.selected) && result.skill_context.selected.length ?
         result.skill_context.selected.join(", ") : "No task-matching project skill"],
       ["First real read-only action", result.skill_context?.next_read_only_tool === "find_symbol" ?
-        "Skills & routing → inspect a project-relative source symbol" : "Unavailable until project methods and Serena tools are verified"],
+        "Skills & routing → inspect a project-relative source symbol" : "Unavailable until workspace methods and SCC tools are verified"],
       ["Noetic Fleet", result.skill_context?.noetic_fleet || "NOT_RUNNING"],
       ["Execution authorization", "NOT GRANTED"],
     ]);
@@ -591,8 +596,8 @@
           target.textContent = "Operator authorization denied. Lock and reauthenticate.";
         } else if (response.status === 409) {
           target.textContent = result.state === "NO_MATCHING_SKILL" ?
-            "This Serena project has no matching enabled skill. Check the active project and install applicable SCC manifests." :
-            "No active project. Activate the intended Serena project before routing.";
+            "This SCC workspace has no matching enabled skill. Check the active project and install applicable SCC manifests." :
+            "No active project. Activate your SCC workspace before routing.";
         } else if (response.status === 422) {
           target.textContent = "Installed skill manifests failed validation; no skill selected.";
         } else {
@@ -624,7 +629,7 @@
         (referenceNames.length ? "Method references (not installed): " + referenceNames.join(", ") + ". " :
           "No matching reference method. ") +
         "Loaded: " + result.loaded.length + " method instruction(s). Executed: 0. Fleet workers running: NO. " +
-        "Use the source-symbol form below for a real read-only Serena tool call.\n\n" +
+        "Use the source-symbol form below for a real read-only SCC semantic call.\n\n" +
         result.skill_playbooks.map(item => item.skill_id + ": " + item.instructions).join("\n\n");
     } catch (error) {
       target.textContent = error.name === "AbortError" ?
@@ -658,7 +663,7 @@
     }
     const currentToken = state.token, currentEpoch = state.epoch;
     button.disabled = true;
-    target.textContent = "Running one explicitly requested read-only Serena find_symbol call…";
+    target.textContent = "Running one explicitly requested read-only SCC symbol lookup…";
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 14000);
     try {
@@ -681,7 +686,7 @@
       const located = payload.symbols.map(item => String(item.name_path || "?") + " @ " +
         String(item.relative_path || relativePath) + ":" +
         String(item.body_location?.start_line ?? "?")).join("; ");
-      target.textContent = "LIVE READ-ONLY SERENA TOOL: find_symbol. Loaded method instructions: " +
+      target.textContent = "LIVE READ-ONLY SCC SEMANTIC TOOL: find_symbol. Loaded method instructions: " +
         payload.loaded.map(item => String(item.skill_id)).join(", ") +
         ". Symbols found: " + payload.symbols.length + ". " +
         (located || "No matching symbols; refine the name or inspect the actual source.") +
@@ -690,7 +695,7 @@
       if (currentToken === state.token && currentEpoch === state.epoch) {
         target.textContent = error.name === "AbortError" ?
           "Semantic inspection timed out; no execution was confirmed." :
-          "Serena semantic inspection failed; no source was modified.";
+          "SCC symbol inspection failed; no source was modified.";
       }
     } finally {
       clearTimeout(timeout);

@@ -12,9 +12,18 @@ const bird=fs.readFileSync(path.join(root,'cuckoo-mark.svg'),'utf8');
 test('SCC Secucko branding is visible at unlock, navigation, hero and footer',()=>{
   assert.match(html,/<title>SCC \| Secucko Semantic Command Center<\/title>/);
   assert.match(html,/SCC<span class="subtle"> \/ Secucko<\/span>/);
-  assert.match(html,/<strong>SCC<\/strong><small>SECUCKO \/ SERENA<\/small>/);
+  assert.match(html,/<strong>SCC<\/strong><small>SECUCKO \/ SEMANTIC COMMAND<\/small>/);
   assert.equal((html.match(/src="cuckoo-mark\.svg"/g)||[]).length,5);
   assert.match(html,/SCC \/ SECUCKO/);
+  assert.match(html,/SCC Semantic Engine/);
+  assert.match(html,/SCC engine version/);
+});
+
+test('SCC navigation stays inside the branded command center',()=>{
+  assert.doesNotMatch(html,/href="\.\.\/index\.html"/);
+  assert.match(html,/data-go="security">Review SCC security settings/);
+  assert.match(js,/projectDisplayName\(snapshot\.project\.name\)/);
+  assert.match(html,/<summary>Open-source licensing and attribution<\/summary>/);
 });
 
 test('bird mark is a standalone, accessible, script-free SVG',()=>{

@@ -75,7 +75,7 @@ if (Test-Path -LiteralPath $peerTokenFile -PathType Leaf) {
     }
     Write-Host 'SCC independent Commander peer credentials loaded for authenticated health checks.'
 }
-Write-Host 'CODEMIND Serena: Starting one local MCP process. No Commander restart will occur.'
+Write-Host 'SCC / Secucko: Starting one local MCP process. No Commander restart will occur.'
 Write-Host 'The dashboard URL is reported by Serena startup logs. The MCP endpoint port is not the dashboard port.'
 Push-Location $repositoryRoot
 $previousErrorActionPreference = $ErrorActionPreference
@@ -91,4 +91,4 @@ try {
     $ErrorActionPreference = $previousErrorActionPreference
     Pop-Location
 }
-if ($serenaExitCode -ne 0) { throw ('Serena exited with code ' + $serenaExitCode) }
+if ($serenaExitCode -ne 0) { throw ('SCC semantic runtime exited with code ' + $serenaExitCode) }
