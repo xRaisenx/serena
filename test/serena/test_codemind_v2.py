@@ -32,9 +32,16 @@ class FakeProject:
 class FakeAgent:
     version = "2.0-test"
 
-    def __init__(self, project=None, broken_tools=False):
+    def __init__(self, project=None, broken_tools=False, semantic_tool=None):
         self.project = project
         self.broken_tools = broken_tools
+        self.semantic_tool = semantic_tool
+
+    def get_tool_by_name(self, name):
+        if self.semantic_tool is None:
+            raise AssertionError("Unexpected semantic tool invocation")
+        assert name == "find_symbol"
+        return self.semantic_tool
 
     def get_active_project(self):
         return self.project
@@ -217,8 +224,7 @@ def test_routed_skill_method_runs_bounded_serena_symbol_lookup(monkeypatch, tmp_
                 ]
             )
 
-    agent = FakeAgent(FakeProject(tmp_path))
-    agent.get_tool_by_name = lambda name: FakeSymbolTool() if name == "find_symbol" else None
+    agent = FakeAgent(FakeProject(tmp_path), semantic_tool=FakeSymbolTool())
     client = build_client(monkeypatch, agent)
     result = client.post(
         "/codemind/api/v2/skills/inspect",
@@ -258,7 +264,6 @@ def test_routed_skill_method_runs_bounded_serena_symbol_lookup(monkeypatch, tmp_
 
 def test_project_without_skills_cannot_start_semantic_fleet(monkeypatch, tmp_path):
     agent = FakeAgent(FakeProject(tmp_path))
-    agent.get_tool_by_name = lambda name: pytest.fail("Semantic tool called without installed project skills")
     client = build_client(monkeypatch, agent)
     response = client.post("/codemind/api/v2/skills/route", headers=_TOKEN, json={"request_text": "debug recurring errors"})
     assert response.status_code == 409
