@@ -9,6 +9,9 @@ on:
       - "test/serena/test_codemind_hooks.cjs"
       - "test/serena/test_scc_brand.cjs"
       - "test/serena/test_scc_operator_workflows.cjs"
+      - "test/serena/test_scc_commander.cjs"
+      - "tools/scc_commander/**"
+      - "scripts/start-scc-commander.ps1"
       - "src/serena/mcp.py"
       - "src/serena/dashboard.py"
       - "src/serena/resources/dashboard/codemind/**"
@@ -42,6 +45,11 @@ jobs:
           PYTHONPATH: src
         run: python -m pytest --noconftest -q test/serena/test_codemind_guard.py test/serena/test_codemind_guard_concurrency.py test/serena/test_codemind_health.py test/serena/test_codemind_tunnel_control.py
       - uses: astral-sh/setup-uv@v5
+      - name: SCC Commander preflight on Windows PowerShell 5.1
+        shell: pwsh
+        run: |
+          $out = & "$env:WINDIR\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -NonInteractive -File scripts/start-scc-commander.ps1 -CheckOnly 2>&1
+          if ($LASTEXITCODE -ne 0 -or -not ($out -match 'SCC_COMMANDER_PREFLIGHT_PASS')) { throw "SCC Commander PowerShell 5.1 preflight failed: $out" }
       - name: Launcher preflight on Windows PowerShell 5.1
         shell: pwsh
         run: |
@@ -71,6 +79,8 @@ jobs:
           node --test test/serena/test_codemind_method_badges.cjs
           node --test test/serena/test_scc_brand.cjs
           node --test test/serena/test_scc_operator_workflows.cjs
+          node --check tools/scc_commander/server.cjs
+          node --test test/serena/test_scc_commander.cjs
       - name: Check Codex project hook registry JSON
         shell: pwsh
         run: |

@@ -63,6 +63,18 @@ if ($CheckOnly) {
     Write-Host ('CODEMIND_LAUNCHER_PREFLIGHT_PASS; PowerShell=' + $PSVersionTable.PSVersion.ToString())
     return
 }
+# Configure the independently owned SCC peer if its protected credential exists.
+# Never copy a token from NMBV or a shared Commander installation.
+$peerTokenFile = Join-Path $env:LOCALAPPDATA 'CODEMIND-Serena\scc-commander\peer-token.txt'
+if (Test-Path -LiteralPath $peerTokenFile -PathType Leaf) {
+    if (-not $env:CODEMIND_COMMANDER_HEALTH_TOKEN) {
+        $env:CODEMIND_COMMANDER_HEALTH_TOKEN = [IO.File]::ReadAllText($peerTokenFile).Trim()
+    }
+    if (-not $env:CODEMIND_COMMANDER_HEALTH_URL) {
+        $env:CODEMIND_COMMANDER_HEALTH_URL = 'http://127.0.0.1:8767/codemind/health'
+    }
+    Write-Host 'SCC independent Commander peer credentials loaded for authenticated health checks.'
+}
 Write-Host 'CODEMIND Serena: Starting one local MCP process. No Commander restart will occur.'
 Write-Host 'The dashboard URL is reported by Serena startup logs. The MCP endpoint port is not the dashboard port.'
 Push-Location $repositoryRoot

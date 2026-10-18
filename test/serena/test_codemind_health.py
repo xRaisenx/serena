@@ -24,9 +24,9 @@ def mk_probe(transport):
 
 def healthy_response(request, timeout):
     nonce = request.get_header("X-codemind-challenge")
-    proof = hmac.new(("x" * 40).encode(), (nonce + ":WindowsCommander.McpServer:v1").encode(), hashlib.sha256).hexdigest()
+    proof = hmac.new(("x" * 40).encode(), (nonce + ":SCC.WindowsCommander:v1").encode(), hashlib.sha256).hexdigest()
     return json.dumps(
-        {"service": "WindowsCommander.McpServer", "ready": True, "mcp_initialize": True, "nonce": nonce, "proof": proof}
+        {"service": "SCC.WindowsCommander", "ready": True, "mcp_initialize": True, "nonce": nonce, "proof": proof}
     ).encode()
 
 
@@ -38,7 +38,7 @@ def test_stale_challenge_is_rejected():
     assert (
         mk_probe(
             lambda req, timeout: json.dumps(
-                {"nonce": "old", "service": "WindowsCommander.McpServer", "ready": True, "mcp_initialize": True}
+                {"nonce": "old", "service": "SCC.WindowsCommander", "ready": True, "mcp_initialize": True}
             ).encode()
         )
         .check()
@@ -77,7 +77,7 @@ def test_unsigned_fake_health_is_rejected():
             lambda req, timeout: json.dumps(
                 {
                     "nonce": req.get_header("X-codemind-challenge"),
-                    "service": "WindowsCommander.McpServer",
+                    "service": "SCC.WindowsCommander",
                     "ready": True,
                     "mcp_initialize": True,
                 }
@@ -122,3 +122,22 @@ def test_backoff_and_circuit_breaker():
     assert circuit.plan(down, owner_authorized=True)["action"] == "CIRCUIT_OPEN"
     assert circuit.plan(MODULE.PeerStatus(True, "ready", True), owner_authorized=False)["action"] == "NO_ACTION"
     assert circuit.plan(down, owner_authorized=True)["action"] == "RECOVERY_PERMITTED"
+
+
+def test_foreign_windows_commander_identity_is_never_accepted():
+    def foreign_response(req, timeout):
+        nonce = req.get_header("X-codemind-challenge")
+        proof = hmac.new(
+            ("x" * 40).encode(), (nonce + ":WindowsCommander.McpServer:v1").encode(), hashlib.sha256
+        ).hexdigest()
+        return json.dumps(
+            {
+                "service": "WindowsCommander.McpServer",
+                "ready": True,
+                "mcp_initialize": True,
+                "nonce": nonce,
+                "proof": proof,
+            }
+        ).encode()
+
+    assert mk_probe(foreign_response).check().ready is False

@@ -18,6 +18,9 @@ from typing import Protocol
 from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 
+# Dedicated SCC peer identity. Never accept a different Windows Commander service.
+SCC_COMMANDER_IDENTITY = "SCC.WindowsCommander"
+
 
 @dataclass(frozen=True)
 class PeerStatus:
@@ -76,11 +79,11 @@ class CommanderHealthProbe:
             if not secrets.compare_digest(str(obj.get("nonce", "")), nonce):
                 return PeerStatus(False, "challenge_mismatch")
             expected_proof = hmac.new(
-                self._token.encode("utf-8"), (nonce + ":WindowsCommander.McpServer:v1").encode("utf-8"), hashlib.sha256
+                self._token.encode("utf-8"), (nonce + ":" + SCC_COMMANDER_IDENTITY + ":v1").encode("utf-8"), hashlib.sha256
             ).hexdigest()
             if not secrets.compare_digest(str(obj.get("proof", "")), expected_proof):
                 return PeerStatus(False, "authentication_failed")
-            if obj.get("service") != "WindowsCommander.McpServer":
+            if obj.get("service") != SCC_COMMANDER_IDENTITY:
                 return PeerStatus(False, "wrong_service")
             if obj.get("ready") is not True or obj.get("mcp_initialize") is not True:
                 return PeerStatus(False, "peer_not_ready", authenticated=True)

@@ -103,8 +103,11 @@ def register_codemind_routes(app: Any, agent: Any, tool_names: list[str], tool_u
     def inspect_commander() -> dict[str, Any]:
         processes = []
         try:
-            for proc in psutil.process_iter(attrs=["pid", "name"]):
-                if str(proc.info.get("name") or "").lower() == "windowscommander.mcpserver.exe":
+            for proc in psutil.process_iter(attrs=["pid", "name", "cmdline"]):
+                # Only SCC-owned Node entry points count, never NMBV services.
+                name = str(proc.info.get("name") or "").lower()
+                cmdline = " ".join(str(arg) for arg in (proc.info.get("cmdline") or [])).lower().replace("\\", "/")
+                if name in {"node", "node.exe"} and "tools/scc_commander/server.cjs" in cmdline:
                     processes.append({"pid": proc.info["pid"]})
         except (OSError, psutil.Error):
             pass
