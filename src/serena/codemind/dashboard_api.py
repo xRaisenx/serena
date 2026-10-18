@@ -307,9 +307,10 @@ def register_codemind_routes(app: Any, agent: Any, tool_names: list[str], tool_u
             ), 409
         try:
             registry = SkillManifestRegistry(Path(project.project_root) / ".codemind" / "skills")
-            routed = SkillRouter(registry).route(task)
+            skills = registry.list_skills()
+            routed = SkillRouter(registry).route(task, skill_snapshot=skills)
             suggestions = recommend_method_references(task)["selected_references"]
-            manifests = {skill["id"]: skill for skill in registry.list_skills()}
+            manifests = {skill["id"]: skill for skill in skills}
             playbooks = [
                 {"skill_id": item["skill_id"], "instructions": manifests[item["skill_id"]]["instructions"]} for item in routed["selected"]
             ]
@@ -370,8 +371,9 @@ def register_codemind_routes(app: Any, agent: Any, tool_names: list[str], tool_u
             abort(400)
         try:
             registry = SkillManifestRegistry(root / ".codemind" / "skills")
-            selection = SkillRouter(registry).route(task)["selected"]
-            manifests = {item["id"]: item for item in registry.list_skills()}
+            skills = registry.list_skills()
+            selection = SkillRouter(registry).route(task, skill_snapshot=skills)["selected"]
+            manifests = {item["id"]: item for item in skills}
             loaded = [{"skill_id": item["skill_id"], "instructions": manifests[item["skill_id"]]["instructions"]} for item in selection]
             if not loaded:
                 return jsonify({"schema": 2, "state": "NO_MATCHING_SKILL", "executed": [], "authorization_granted": False}), 409

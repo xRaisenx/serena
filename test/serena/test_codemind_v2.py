@@ -9,6 +9,7 @@ import pytest
 from flask import Flask
 
 from serena.codemind.dashboard_api import register_codemind_routes
+from serena.codemind.modules import SkillManifestRegistry
 from serena.codemind.read_model import build_v2_overview
 
 _TOKEN = {"Authorization": "Bearer " + "a" * 40}
@@ -260,6 +261,50 @@ def test_routed_skill_method_runs_bounded_serena_symbol_lookup(monkeypatch, tmp_
         )
         assert denied.status_code == 400
     assert len(observed) == 1
+
+
+@pytest.mark.parametrize("endpoint", ["route", "inspect"])
+def test_skill_route_remains_coherent_if_registry_changes_mid_request(monkeypatch, tmp_path, endpoint):
+    """Both the router and its instructions must come from the same snapshot."""
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "runtime"))
+    source_dir = tmp_path / "src" / "serena"
+    source_dir.mkdir(parents=True)
+    (source_dir / "planner.py").write_text("class Planner: pass\n", encoding="utf-8")
+    skill = {
+        "id": "deterministic-debugging",
+        "version": "1",
+        "description": "debug regression",
+        "instructions": "Inspect evidence and test the regression",
+        "enabled": True,
+    }
+    reads = []
+
+    def changing_registry(self):
+        reads.append(1)
+        return [skill] if len(reads) == 1 else []
+
+    class FakeSymbolTool:
+        def apply(self, **kwargs):
+            return json.dumps([{"name_path": "Planner", "relative_path": "src/serena/planner.py"}])
+
+    monkeypatch.setattr(SkillManifestRegistry, "list_skills", changing_registry)
+    client = build_client(monkeypatch, FakeAgent(FakeProject(tmp_path), semantic_tool=FakeSymbolTool()))
+    payload = {"request_text": "debug regression"}
+    if endpoint == "inspect":
+        payload.update({"relative_path": "src/serena/planner.py", "symbol": "Planner"})
+    response = client.post("/codemind/api/v2/skills/" + endpoint, headers=_TOKEN, json=payload)
+    assert response.status_code == 200
+    result = response.get_json()
+    assert result["state"] == ("INSPECTED" if endpoint == "inspect" else "ROUTED")
+    if endpoint == "route":
+        assert result["loaded"] == [skill["id"]]
+        assert result["skill_playbooks"][0]["instructions"] == skill["instructions"]
+        assert result["executed"] == []
+    else:
+        assert result["loaded"][0]["instructions"] == skill["instructions"]
+        assert result["executed"][0]["tool"] == "find_symbol"
+        assert result["symbols"][0]["name_path"] == "Planner"
+    assert reads
 
 
 def test_project_without_skills_cannot_start_semantic_fleet(monkeypatch, tmp_path):

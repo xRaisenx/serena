@@ -34,12 +34,12 @@ class SkillRouter:
     def __init__(self, registry: SkillManifestRegistry):
         self.registry = registry
 
-    def route(self, request: str) -> dict[str, Any]:
+    def route(self, request: str, *, skill_snapshot: list[dict[str, Any]] | None = None) -> dict[str, Any]:
         if not isinstance(request, str) or not request.strip():
             raise ValueError("A nonempty engineering request is required")
         words = set(_WORD.findall(request.lower())) - _STOP
         scored: list[tuple[int, str]] = []
-        for module in self.registry.list_skills():
+        for module in self.registry.list_skills() if skill_snapshot is None else skill_snapshot:
             metadata = module["id"].replace("-", " ") + " " + module["description"]
             tokens = set(_WORD.findall(metadata.lower())) - _STOP
             score = len(words & tokens)
