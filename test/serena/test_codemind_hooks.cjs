@@ -5,6 +5,7 @@ process.env.CODEMIND_HOOK_STATE_DIR=dir;
 const h=require('../../.codex/hooks/codemind-hooks.cjs');
 const e=(event,values={})=>({cwd:'D:/DEV/codemind-serena',session_id:'test-main',hook_event_name:event,...values});
 test('bounded SessionStart without process mutations',()=>{const o=h.run(e('SessionStart',{source:'startup'}));assert.ok(o.hookSpecificOutput.additionalContext.length<1050);assert.match(JSON.stringify(o),/CODEMIND-100/)});
+test('SessionStart uses only CODEMIND tool routing',()=>{const s=h.run(e('SessionStart',{source:'startup'})).hookSpecificOutput.additionalContext;assert.match(s,/\bcodemind_skill_route\b/);assert.match(s,/\bcodemind_next_action\b/);assert.doesNotMatch(s,/\bnmbv_[a-z0-9_]+\b/i)});
 test('UserPromptSubmit selects installed SkillRouter metadata',()=>{const o=h.run(e('UserPromptSubmit',{prompt:'Please help with deterministic debugging'}));assert.match(JSON.stringify(o),/deterministic-debugging/)});
 test('unmatched prompt generates no overhead',()=>assert.deepEqual(h.run(e('UserPromptSubmit',{prompt:'hello'})),{}));
 test('destructive Commander process command gets advisory',()=>{const o=h.run(e('PreToolUse',{tool_name:'Bash',tool_input:{command:'Stop-Process -Name WindowsCommander.McpServer'}}));assert.match(JSON.stringify(o),/ADVISORY/);assert.equal(o.hookSpecificOutput.permissionDecision,undefined)});

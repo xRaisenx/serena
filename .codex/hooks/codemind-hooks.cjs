@@ -63,7 +63,7 @@ function run(e){
  const entries=history().filter(x=>x.session===sid(e));
  if(ev==='SessionStart'){
    record({event:ev,at:Date.now(),session:sid(e),source:e.source||'unknown'});
-   return context(ev,'CODEMIND-100: bounded task triage and neurosymbolic invariants. Serena symbols/references/diagnostics first; use nmbv_skill_route and nmbv_next_action only if available and authorized. Windows Commander remains independent. Preserve dirty edits; never reset or kill unrelated processes. No timeout/skipped test is PASS. Two identical failures require a different strategy. Hooks cannot grant execution authority.');
+   return context(ev,'CODEMIND-100: bounded task triage and neurosymbolic invariants. Serena symbols/references/diagnostics first; use codemind_skill_route and codemind_next_action for advisory guidance only when available and authorized. Windows Commander remains independent. Preserve dirty edits; never reset or kill unrelated processes. No timeout/skipped test is PASS. Two identical failures require a different strategy. Hooks cannot grant execution authority.');
  }
  if(ev==='UserPromptSubmit'){
    const selected=route(String(e.prompt||'').slice(0,12000));if(!selected.length)return {};
