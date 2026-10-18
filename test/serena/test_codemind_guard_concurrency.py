@@ -28,10 +28,7 @@ def test_equivalent_failures_are_counted_across_processes(tmp_path: Path):
     guard = _load_guard()(db_path)
     context = multiprocessing.get_context("spawn")
     begin = context.Event()
-    workers = [
-        context.Process(target=_record_failures, args=(str(db_path), begin, 35))
-        for _ in range(8)
-    ]
+    workers = [context.Process(target=_record_failures, args=(str(db_path), begin, 35)) for _ in range(8)]
     try:
         for worker in workers:
             worker.start()
