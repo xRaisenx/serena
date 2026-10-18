@@ -44,6 +44,8 @@ test('preserve authenticated operator controls and legacy API contract',()=>{
 test('design tokens support two themes, mobile widths and reduced motion',()=>{
   assert.match(css,/:root\{color-scheme:dark;/);
   assert.match(css,/body\.light\{color-scheme:light;/);
+  assert.match(css,/body\.light \.button\.primary\{color:#fff\}/);
+  assert.match(css,/body\.light \.sidebar\{background:/);
   assert.match(css,/\.hero-bird\{/);
   for(const px of [900,650,360]) assert.ok(css.includes('@media(max-width:'+px+'px)'),px);
   assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
