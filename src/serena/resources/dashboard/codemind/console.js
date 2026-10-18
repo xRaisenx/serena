@@ -1,7 +1,7 @@
 /* Secucko SCC Mission Control. Existing authenticated CODEMIND APIs remain unchanged. */
 "use strict";
 (() => {
-  const state = { token: "", snapshot: null, v2: null, catalog: null, view: "overview", theme: "dark", busy: false, epoch: 0 };
+  const state = { token: "", snapshot: null, v2: null, catalog: null, view: "overview", theme: "dark", busy: false, epoch: 0, skillRoute: null, forecast: null, goal: "" };
   const byId = id => document.getElementById(id);
   const all = selector => Array.from(document.querySelectorAll(selector));
   const text = (id, value) => { const node = byId(id); if (node) node.textContent = value == null ? "—" : String(value); };
@@ -77,6 +77,53 @@
     return "SERENA CORE";
   }
 
+
+  function downloadJSON(filename, payload) {
+    const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"}));
+    const anchor = document.createElement("a");
+    anchor.href = url; anchor.download = filename;
+    document.body.append(anchor); anchor.click(); anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function sanitizedTasks() {
+    return Array.isArray(state.snapshot?.tasks?.items) ?
+      state.snapshot.tasks.items.map(t => ({
+        id: String(t.id ?? ""), name: String(t.name ?? ""),
+        running: t.running === true, finished_successfully: t.finished_successfully === true
+      })) : [];
+  }
+
+  function renderOperatorActions(snapshot) {
+    const node = byId("operator-actions");
+    if (!node) return;
+    node.replaceChildren();
+    const missing = [];
+    if (snapshot.project?.state !== "activated") missing.push(["Activate a Serena project", "tools", "No project is activated."]);
+    if (snapshot.commander?.ready !== true || snapshot.commander?.authenticated !== true)
+      missing.push(["Verify Commander peer", "commander", "Independent Commander health has not been authenticated."]);
+    if (snapshot.tunnel?.connection_verified !== true)
+      missing.push(["Validate remote tunnel consumer", "connections", "Client process readiness cannot prove a ChatGPT tool round-trip."]);
+    if (state.v2?.source?.revision_attested !== true)
+      missing.push(["Inspect runtime generation", "security", "The running Python build revision has not been attested."]);
+    if (snapshot.skills?.state === "available") missing.push(["Route a coding task", "skills", "Use validated project skills to prepare a bounded engineering packet."]);
+    if (!missing.length) missing.push(["Inspect accepted evidence", "security", "Review which release gates are independently verified."]);
+    missing.slice(0, 5).forEach(([label,view,description]) => {
+      const row=element("div","scc-action-row");
+      const copy=element("span");copy.append(element("strong","",label),element("small","",description));
+      const button=element("button","button secondary compact","Open →");button.type="button";button.dataset.actionView=view;
+      row.append(copy,button);node.append(row);
+    });
+  }
+
+  async function copyToolName(name) {
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error("Clipboard permission unavailable");
+      await navigator.clipboard.writeText(name);
+      notify("Copied tool name: " + name + ". SCC has not invoked it.");
+    } catch { notify("Clipboard unavailable. Select the visible tool name to copy manually."); }
+  }
+
   function renderTools() {
     const node = byId("tools-list");
     node.replaceChildren();
@@ -96,6 +143,9 @@
     for (const name of matching) {
       const card = element("div", "tool-item");
       card.append(element("span", "tool-type", categorizeTool(name)), element("strong", "", name));
+      const copy = element("button", "button secondary compact", "Copy tool name");
+      copy.type = "button"; copy.dataset.copyTool = name; copy.setAttribute("aria-label", "Copy " + name + " tool name");
+      card.append(copy);
       fragment.append(card);
     }
     node.append(fragment);
@@ -160,11 +210,12 @@
       ["Commander process", commander.processes?.length ? commander.processes.length + " process(es) found" : "No local process observation", commander.processes?.length ? "PRESENT" : "UNVERIFIED", commander.processes?.length ? "good" : "warn"],
       ["Commander authenticated MCP readiness", commander.peer_status || "No attestation", commander.ready && commander.authenticated ? "VERIFIED" : "UNVERIFIED", commander.ready && commander.authenticated ? "good" : "warn"],
       ["Autonomous dual-watchdog recovery", "Independent fault-injection tests required", "UNVERIFIED", "warn"],
-      ["NMBV Bot worker bridge", snapshot.integrations?.nmbv_bot || "No runtime attestation", "UNVERIFIED", "warn"],
+      ["Installed SCC skill methods", skills.state === "available" ? String((skills.items || []).length) + " project manifests; routing is advisory" : "No verified skill manifest", skills.state === "available" ? "OBSERVED" : "UNVERIFIED", skills.state === "available" ? "good" : "warn"],
       ["OpenAI tunnel transport", tunnel.state || "No connection evidence", tunnel.connection_verified ? "VERIFIED" : "UNVERIFIED", tunnel.connection_verified ? "good" : "warn"],
       ["ChatGPT end-to-end tool call", "Not proven by a configured tunnel ID", "UNVERIFIED", "warn"],
     ];
     ledger.forEach(([title, explanation, status, grade]) => node.append(cardStatus(title, explanation, status, grade)));
+    state.acceptance = ledger.map(([title, explanation, status]) => ({ title, explanation, status }));
   }
 
   function render(snapshot) {
@@ -224,6 +275,7 @@
     renderSkills(snapshot);
     renderTasks(snapshot);
     renderAcceptance(snapshot);
+    renderOperatorActions(snapshot);
   }
 
 
@@ -326,10 +378,13 @@
       return;
     }
     submit.disabled = true;
+    state.forecast = null;
+    byId("packet-download").disabled = true;
     text("forecast-status", "Computing a bounded evidence-gated preview…");
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 11000);
     const currentToken = state.token;
+    const currentEpoch = state.epoch;
     try {
       const response = await fetch("/codemind/api/v2/actions/preview", {
         method: "POST", credentials: "same-origin", cache: "no-store",
@@ -345,9 +400,14 @@
           result.fu_candidates.some(x => x.executable !== false || x.authorized_by_forecast !== false)) {
         throw new Error("Unsafe or invalid preview response. Nothing executed.");
       }
-      if (state.token === currentToken) renderForecast(result);
+      if (state.token === currentToken && state.epoch === currentEpoch) {
+        state.forecast = result;
+        state.goal = goal;
+        byId("packet-download").disabled = false;
+        renderForecast(result);
+      }
     } catch (error) {
-      if (state.token === currentToken)
+      if (state.token === currentToken && state.epoch === currentEpoch)
         text("forecast-status", error.name === "AbortError" ?
           "Forecast timed out; no result has been accepted." :
           "Preview failed: " + error.message + ". Nothing executed.");
@@ -498,7 +558,10 @@
       target.textContent = "Unlock the dashboard and finish the current request first.";
       return;
     }
+    const routedToken = state.token;
+    const routedEpoch = state.epoch;
     button.disabled = true;
+    state.skillRoute = null;
     target.textContent = "Analyzing the active project's installed skill manifests…";
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 9000);
@@ -506,13 +569,14 @@
       const response = await fetch("/codemind/api/v2/skills/route", {
         method: "POST", credentials: "same-origin", cache: "no-store",
         headers: {
-          Authorization: "Bearer " + state.token,
+          Authorization: "Bearer " + routedToken,
           Accept: "application/json", "Content-Type": "application/json",
         },
         body: JSON.stringify({ request_text: requestText }),
         signal: controller.signal,
       });
       const result = await response.json();
+      if (state.token !== routedToken || state.epoch !== routedEpoch) return;
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
           target.textContent = "Operator authorization denied. Lock and reauthenticate.";
@@ -529,6 +593,8 @@
         target.textContent = "Invalid or unsafe routing response. Nothing was executed.";
         return;
       }
+      state.skillRoute = {request_text: requestText, selected: Array.isArray(result.selected) ?
+        result.selected.slice(0,3).map(item => ({skill_id:String(item.skill_id),score:Number(item.score)})) : []};
       const names = Array.isArray(result.selected) ?
         result.selected.slice(0, 3).map(item => String(item.skill_id) + " (score " + Number(item.score) + ")") : [];
       const referenceNames = Array.isArray(result.reference_suggestions) ?
@@ -550,6 +616,88 @@
     }
   }
 
+
+  byId("operator-actions").addEventListener("click", event => {
+    const button = event.target.closest("[data-action-view]");
+    if (button) currentView(button.dataset.actionView);
+  });
+  byId("tools-list").addEventListener("click", event => {
+    const button = event.target.closest("[data-copy-tool]");
+    if (button && state.snapshot) copyToolName(button.dataset.copyTool);
+  });
+  byId("skill-packet-next").addEventListener("click", async () => {
+    if (!byId("skill-route-form").reportValidity() || !state.token || state.busy) return;
+    const goal = byId("skill-route-input").value.trim();
+    await routeSkillRequest({preventDefault() {}});
+    if (!state.skillRoute || state.skillRoute.request_text !== goal) return;
+    byId("forecast-input").value = goal;
+    currentView("forecast");
+    await requestForecast({preventDefault() {}});
+  });
+  byId("packet-skill-link").addEventListener("click", () => {
+    if (byId("forecast-input").value.trim()) byId("skill-route-input").value = byId("forecast-input").value.trim();
+    currentView("skills"); byId("skill-route-input").focus();
+  });
+  byId("packet-download").addEventListener("click", () => {
+    if (!state.token || !state.forecast || !state.goal) return;
+    const f = state.forecast;
+    downloadJSON("scc-engineering-packet.json",{
+      schema:"scc-engineering-packet-v1",created_at:new Date().toISOString(),
+      status:"ADVISORY_ONLY",authorization_granted:false,
+      project:state.snapshot?.project?.name || null,goal:state.goal,
+      installed_skills:state.skillRoute?.request_text === state.goal ? state.skillRoute.selected : [],
+      canonical:f.canonical,preview:f.preview,conditional_futures:f.fu_candidates,
+      source_revision:state.v2?.source?.revision_attested === true ? state.v2.source.revision : null,
+      release_note:"No commands run, work authorized, or acceptance proved by this packet."
+    });
+    notify("Engineering packet downloaded; no commands executed.");
+  });
+  byId("learning-investigate").addEventListener("click", () => {
+    const n=state.snapshot?.learning?.tracked_strategies;
+    byId("forecast-input").value="Investigate "+(Number.isFinite(Number(n))?Number(n):"observed")+" SCC failure strategy fingerprint(s). Find the first reproducible defect, switch strategy after repeated identical failures, and require new test evidence.";
+    currentView("forecast");
+  });
+  byId("learning-export").addEventListener("click", () => {
+    if (!state.snapshot) return notify("Authenticate and refresh before exporting.");
+    const l=state.snapshot.learning || {};
+    downloadJSON("scc-guard-observation.json",{schema:"scc-guard-observation-v1",captured_at:new Date().toISOString(),project:state.snapshot.project?.name,tracked_strategies:l.tracked_strategies,blocked_strategies:l.blocked_strategies,state:l.state,acceptance:"OBSERVATION_ONLY"});
+  });
+  byId("task-export").addEventListener("click", () => {
+    if (!state.snapshot) return notify("Authenticate and refresh before exporting.");
+    downloadJSON("scc-task-observations.json",{schema:"scc-task-observations-v1",captured_at:new Date().toISOString(),project:state.snapshot.project?.name,tasks:sanitizedTasks(),status:"OBSERVATION_ONLY"});
+  });
+  byId("task-plan").addEventListener("click", () => {
+    const tasks=sanitizedTasks();
+    const first=tasks.find(t=>t.running)||tasks[0];
+    byId("forecast-input").value=first?"Investigate task "+first.name+" ("+first.id+"). Determine current evidence, missing acceptance gate and safe next engineering action.":"Inspect the current SCC task queue, identify the first missing acceptance criterion and propose an evidence-backed action.";
+    currentView("forecast");
+  });
+  byId("commander-check").addEventListener("click", async () => {
+    if (!state.token) return notify("Unlock SCC before checking the peer.");
+    text("commander-check-result","Requesting fresh authenticated SCC runtime evidence…");
+    if (!await refresh()) {text("commander-check-result","Peer refresh failed. No readiness inferred.");return;}
+    const c=state.snapshot?.commander||{};
+    text("commander-check-result",c.ready === true && c.authenticated === true?
+      "Authenticated Commander peer verified ready.":
+      "NOT VERIFIED: "+phrase(c.peer_status,"not_configured")+". Configure CODEMIND_COMMANDER_HEALTH_URL and CODEMIND_COMMANDER_HEALTH_TOKEN in SCC, and implement the compatible independent peer. No restart was attempted.");
+  });
+  byId("tunnel-evidence").addEventListener("click", () => {
+    if (!state.snapshot) return notify("Authenticate and refresh before exporting.");
+    const t=state.snapshot.tunnel||{};
+    downloadJSON("scc-tunnel-observation.json",{schema:"scc-tunnel-observation-v1",captured_at:new Date().toISOString(),state:t.state||"unverified",managed_process_running:t.managed_process_running===true,client_ready:t.client_ready===true,connection_verified:t.connection_verified===true,health:t.health||"not_reported",notice:"No tunnel key or connection secret is exported."});
+  });
+  byId("security-export").addEventListener("click", () => {
+    if (!state.snapshot) return notify("Authenticate and refresh before exporting.");
+    downloadJSON("scc-acceptance-evidence.json",{schema:"scc-acceptance-evidence-v1",captured_at:new Date().toISOString(),project:state.snapshot.project?.name,revision_attested:state.v2?.source?.revision_attested===true,gates:state.acceptance||[],notice:"Observed telemetry is not an independent runtime or consumer acceptance certificate."});
+  });
+  byId("security-next").addEventListener("click", () => {
+    const c=state.snapshot?.commander||{},t=state.snapshot?.tunnel||{};
+    if (!(c.ready===true&&c.authenticated===true))currentView("commander");
+    else if(t.connection_verified!==true)currentView("connections");
+    else if(state.v2?.source?.revision_attested!==true)currentView("tools");
+    else currentView("forecast");
+  });
+
   byId("skill-route-form").addEventListener("submit", routeSkillRequest);
   byId("forecast-form").addEventListener("submit", requestForecast);
   byId("method-search").addEventListener("input", renderMethodCatalog);
@@ -566,6 +714,8 @@
   byId("lock-btn").addEventListener("click", () => {
     state.epoch += 1;
     state.token = ""; state.snapshot = null; state.v2 = null; state.catalog = null;
+    state.skillRoute = null; state.forecast = null; state.goal = ""; state.acceptance = [];
+    byId("packet-download").disabled = true;
     byId("workspace").hidden = true; byId("unlock").hidden = false;
     byId("operator-token").focus(); notify("Session locked; no operator token retained.");
   });

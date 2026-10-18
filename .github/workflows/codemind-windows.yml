@@ -8,6 +8,7 @@ on:
       - ".codex/hooks/**"
       - "test/serena/test_codemind_hooks.cjs"
       - "test/serena/test_scc_brand.cjs"
+      - "test/serena/test_scc_operator_workflows.cjs"
       - "src/serena/mcp.py"
       - "src/serena/dashboard.py"
       - "src/serena/resources/dashboard/codemind/**"
@@ -69,6 +70,7 @@ jobs:
           node --test test/serena/test_codemind_hooks.cjs
           node --test test/serena/test_codemind_method_badges.cjs
           node --test test/serena/test_scc_brand.cjs
+          node --test test/serena/test_scc_operator_workflows.cjs
       - name: Check Codex project hook registry JSON
         shell: pwsh
         run: |

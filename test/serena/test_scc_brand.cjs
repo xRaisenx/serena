@@ -13,7 +13,7 @@ test('SCC Secucko branding is visible at unlock, navigation, hero and footer',()
   assert.match(html,/<title>SCC \| Secucko Semantic Command Center<\/title>/);
   assert.match(html,/SCC<span class="subtle"> \/ Secucko<\/span>/);
   assert.match(html,/<strong>SCC<\/strong><small>SECUCKO \/ SERENA<\/small>/);
-  assert.equal((html.match(/src="cuckoo-mark\.svg"/g)||[]).length,4);
+  assert.equal((html.match(/src="cuckoo-mark\.svg"/g)||[]).length,5);
   assert.match(html,/SCC \/ SECUCKO/);
 });
 
