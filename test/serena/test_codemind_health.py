@@ -25,9 +25,7 @@ def mk_probe(transport):
 def healthy_response(request, timeout):
     nonce = request.get_header("X-codemind-challenge")
     proof = hmac.new(("x" * 40).encode(), (nonce + ":SCC.WindowsCommander:v1").encode(), hashlib.sha256).hexdigest()
-    return json.dumps(
-        {"service": "SCC.WindowsCommander", "ready": True, "mcp_initialize": True, "nonce": nonce, "proof": proof}
-    ).encode()
+    return json.dumps({"service": "SCC.WindowsCommander", "ready": True, "mcp_initialize": True, "nonce": nonce, "proof": proof}).encode()
 
 
 def test_genuine_challenge_response_is_accepted():
@@ -127,9 +125,7 @@ def test_backoff_and_circuit_breaker():
 def test_foreign_windows_commander_identity_is_never_accepted():
     def foreign_response(req, timeout):
         nonce = req.get_header("X-codemind-challenge")
-        proof = hmac.new(
-            ("x" * 40).encode(), (nonce + ":WindowsCommander.McpServer:v1").encode(), hashlib.sha256
-        ).hexdigest()
+        proof = hmac.new(("x" * 40).encode(), (nonce + ":WindowsCommander.McpServer:v1").encode(), hashlib.sha256).hexdigest()
         return json.dumps(
             {
                 "service": "WindowsCommander.McpServer",
