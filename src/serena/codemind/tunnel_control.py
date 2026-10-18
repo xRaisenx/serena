@@ -8,10 +8,13 @@ The tunnel remains a distinct process and is never interpreted as ChatGPT app ac
 from __future__ import annotations
 
 import ctypes
+import hashlib
 import os
 import re
+import secrets
 import subprocess
 import threading
+import time
 from ctypes import wintypes
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -76,6 +79,9 @@ class TunnelController:
         self._health_url_file = self._data_dir / "tunnel-health-url.txt"
         self._binary = executable or (root / ".codemind" / "bin" / "tunnel-client-v0.0.16" / "tunnel-client.exe")
         self._process: subprocess.Popen[bytes] | None = None
+        self._pending_consumer_hash: bytes | None = None
+        self._pending_consumer_expires_at = 0.0
+        self._consumer_verified_at = 0.0
 
     def _read_secret(self) -> str:
         try:
@@ -160,6 +166,9 @@ class TunnelController:
             proc = self._process
             running = bool(proc and proc.poll() is None)
             readiness = self._readiness() if running else {"ready": False, "health": "not_running"}
+            consumer_proof_fresh = bool(
+                running and readiness["ready"] and self._consumer_verified_at and time.monotonic() - self._consumer_verified_at < 600
+            )
             return {
                 "id": TUNNEL_ID,
                 "profile": PROFILE,
@@ -169,8 +178,53 @@ class TunnelController:
                 "client_ready": bool(readiness["ready"]),
                 "health": readiness["health"],
                 # ChatGPT consumer acceptance requires a real remote tool call.
-                "connection_verified": False,
-                "chatgpt_tool_call_verified": False,
+                "connection_verified": consumer_proof_fresh,
+                "chatgpt_tool_call_verified": consumer_proof_fresh,
+                "consumer_proof_scope": "operator_challenge_mcp_call",
+                "consumer_proof_origin_attested": False,
+            }
+
+    def issue_consumer_challenge(self) -> dict[str, object]:
+        """Authorize a one-time, short-lived MCP call challenge via the operator API."""
+        with _LOCK:
+            status = self.status()
+            if not (status["managed_process_running"] and status["client_ready"]):
+                raise TunnelControlError("Start and verify the managed tunnel before issuing a challenge")
+            challenge = secrets.token_hex(20)
+            self._pending_consumer_hash = hashlib.sha256(challenge.encode("ascii")).digest()
+            self._pending_consumer_expires_at = time.monotonic() + 90
+            return {"challenge": challenge, "expires_in_seconds": 90, "authorization_granted": False}
+
+    def accept_consumer_receipt(self, challenge: str) -> dict[str, object]:
+        """Record actual MCP tool dispatch after an operator-issued challenge.
+
+        This proves a valid tool round-trip, not cryptographic cloud-caller identity.
+        """
+        with _LOCK:
+            digest = (
+                hashlib.sha256(challenge.encode("ascii")).digest()
+                if (isinstance(challenge, str) and re.fullmatch(r"[0-9a-f]{40}", challenge))
+                else b""
+            )
+            valid = bool(
+                digest
+                and self._pending_consumer_hash
+                and secrets.compare_digest(digest, self._pending_consumer_hash)
+                and time.monotonic() <= self._pending_consumer_expires_at
+            )
+            if not valid:
+                raise TunnelControlError("No matching live SCC operator challenge")
+            status = self.status()
+            if not (status["managed_process_running"] and status["client_ready"]):
+                raise TunnelControlError("Managed tunnel is not ready")
+            self._pending_consumer_hash = None
+            self._pending_consumer_expires_at = 0.0
+            self._consumer_verified_at = time.monotonic()
+            return {
+                "accepted": True,
+                "tool_call_observed": True,
+                "proof_valid_for_seconds": 600,
+                "origin_cryptographically_attested": False,
             }
 
     def start(self) -> dict[str, object]:
@@ -180,6 +234,9 @@ class TunnelController:
             checked = self.doctor()
             if not checked["passed"]:
                 raise TunnelControlError(str(checked["message"]))
+            self._consumer_verified_at = 0.0
+            self._pending_consumer_hash = None
+            self._pending_consumer_expires_at = 0.0
             self._data_dir.mkdir(parents=True, exist_ok=True)
             self._health_url_file.unlink(missing_ok=True)
             env = self._secret_env()
@@ -215,6 +272,8 @@ class TunnelController:
                 except subprocess.TimeoutExpired as exc:
                     raise TunnelControlError("Managed tunnel did not stop in time; no unrelated process was terminated") from exc
             self._process = None
+            self._pending_consumer_hash = None
+            self._consumer_verified_at = 0.0
             return self.status()
 
 

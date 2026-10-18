@@ -157,6 +157,54 @@ def test_remove_key_blocked_when_client_running(ctl):
         ctl.remove_key()
 
 
+def test_consumer_challenge_requires_managed_ready_tunnel(ctl, monkeypatch):
+    with pytest.raises(MODULE.TunnelControlError):
+        ctl.issue_consumer_challenge()
+    ctl._process = SimpleNamespace(poll=lambda: None)
+    monkeypatch.setattr(ctl, "_readiness", lambda: {"ready": True, "health": "ready"})
+    challenge = ctl.issue_consumer_challenge()
+    assert len(challenge["challenge"]) == 40
+    assert challenge["authorization_granted"] is False
+    assert ctl.status()["connection_verified"] is False
+    with pytest.raises(MODULE.TunnelControlError):
+        ctl.accept_consumer_receipt("0" * 40)
+    result = ctl.accept_consumer_receipt(challenge["challenge"])
+    assert result["accepted"] is True
+    assert result["origin_cryptographically_attested"] is False
+    assert ctl.status()["connection_verified"] is True
+    assert ctl.status()["chatgpt_tool_call_verified"] is True
+    assert challenge["challenge"] not in str(ctl.status())
+    with pytest.raises(MODULE.TunnelControlError):
+        ctl.accept_consumer_receipt(challenge["challenge"])
+
+
+def test_consumer_receipt_is_bounded_and_expires(ctl, monkeypatch):
+    clock = [1000.0]
+    monkeypatch.setattr(MODULE.time, "monotonic", lambda: clock[0])
+    ctl._process = SimpleNamespace(poll=lambda: None)
+    monkeypatch.setattr(ctl, "_readiness", lambda: {"ready": True, "health": "ready"})
+    challenge = ctl.issue_consumer_challenge()["challenge"]
+    clock[0] += 91
+    with pytest.raises(MODULE.TunnelControlError):
+        ctl.accept_consumer_receipt(challenge)
+    challenge = ctl.issue_consumer_challenge()["challenge"]
+    assert ctl.accept_consumer_receipt(challenge)["accepted"] is True
+    assert ctl.status()["connection_verified"] is True
+    clock[0] += 601
+    assert ctl.status()["connection_verified"] is False
+
+
+def test_consumer_receipt_fails_closed_when_client_stops(ctl, monkeypatch):
+    ctl._process = SimpleNamespace(poll=lambda: None)
+    monkeypatch.setattr(ctl, "_readiness", lambda: {"ready": True, "health": "ready"})
+    challenge = ctl.issue_consumer_challenge()["challenge"]
+    ctl.accept_consumer_receipt(challenge)
+    ctl._process = SimpleNamespace(poll=lambda: 0)
+    assert ctl.status()["connection_verified"] is False
+    with pytest.raises(MODULE.TunnelControlError):
+        ctl.issue_consumer_challenge()
+
+
 @pytest.mark.skipif(MODULE.os.name != "nt", reason="Real DPAPI only exists on Windows")
 def test_real_windows_dpapi_roundtrip():
     key = b"sk-proj-" + b"r" * 80

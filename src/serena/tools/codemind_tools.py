@@ -47,9 +47,10 @@ class CodemindCommanderStatusTool(Tool, ToolMarkerDoesNotRequireActiveProject):
         from serena.codemind.health import CommanderHealthProbe
 
         entries = []
-        for process in psutil.process_iter(attrs=["pid", "name"]):
-            name = (process.info["name"] or "").lower()
-            if name == "windowscommander.mcpserver.exe":
+        for process in psutil.process_iter(attrs=["pid", "name", "cmdline"]):
+            name = str(process.info.get("name") or "").lower()
+            command = " ".join(str(arg) for arg in (process.info.get("cmdline") or [])).lower().replace("\\", "/")
+            if name in {"node", "node.exe"} and "tools/scc_commander/server.cjs" in command:
                 entries.append({"pid": process.info["pid"]})
 
         endpoint = os.environ.get("CODEMIND_COMMANDER_HEALTH_URL")
@@ -69,6 +70,19 @@ class CodemindCommanderStatusTool(Tool, ToolMarkerDoesNotRequireActiveProject):
             },
             sort_keys=True,
         )
+
+
+class CodemindConsumerProofTool(Tool, ToolMarkerDoesNotRequireActiveProject):
+    """Verify a fresh operator-issued challenge through an actual SCC MCP tool call."""
+
+    def apply(self, challenge: str) -> str:
+        """Record a one-time MCP consumer proof without granting tool execution authority.
+
+        :param challenge: Fresh 40-hex-character challenge from SCC's authenticated dashboard.
+        """
+        from serena.codemind.tunnel_control import controller
+
+        return json.dumps(controller.accept_consumer_receipt(challenge), sort_keys=True)
 
 
 class CodemindSkillRouteTool(Tool):

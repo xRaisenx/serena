@@ -200,6 +200,7 @@
     const learning = snapshot.learning || {};
     const commander = snapshot.commander || {};
     const tunnel = snapshot.tunnel || {};
+    const tunnelReady = tunnel.managed_process_running === true && tunnel.client_ready === true && tunnel.health === "ready";
     const ledger = [
       ["Dashboard authentication", "Valid operator token accepted on loopback", "PASS", "good"],
       ["Serena live dashboard API", "Authenticated response from the runtime", "PASS", "good"],
@@ -211,8 +212,8 @@
       ["Commander authenticated MCP readiness", commander.peer_status || "No attestation", commander.ready && commander.authenticated ? "VERIFIED" : "UNVERIFIED", commander.ready && commander.authenticated ? "good" : "warn"],
       ["Autonomous dual-watchdog recovery", "Independent fault-injection tests required", "UNVERIFIED", "warn"],
       ["Installed SCC skill methods", skills.state === "available" ? String((skills.items || []).length) + " project manifests; routing is advisory" : "No verified skill manifest", skills.state === "available" ? "OBSERVED" : "UNVERIFIED", skills.state === "available" ? "good" : "warn"],
-      ["OpenAI tunnel transport", tunnel.state || "No connection evidence", tunnel.connection_verified ? "VERIFIED" : "UNVERIFIED", tunnel.connection_verified ? "good" : "warn"],
-      ["ChatGPT end-to-end tool call", "Not proven by a configured tunnel ID", "UNVERIFIED", "warn"],
+      ["OpenAI tunnel transport", tunnelReady ? "Managed tunnel-client returned local /readyz 200" : phrase(tunnel.health, "Tunnel not ready"), tunnelReady ? "CLIENT READY" : "UNVERIFIED", tunnelReady ? "good" : "warn"],
+      ["ChatGPT end-to-end tool call", tunnel.connection_verified ? "Recent operator-challenged MCP tool call observed; remote origin is not cryptographically attested" : "Use the one-time consumer challenge and call SCC from ChatGPT", tunnel.connection_verified ? "MCP CALL SEEN" : "UNVERIFIED", tunnel.connection_verified ? "good" : "warn"],
     ];
     ledger.forEach(([title, explanation, status, grade]) => node.append(cardStatus(title, explanation, status, grade)));
     state.acceptance = ledger.map(([title, explanation, status]) => ({ title, explanation, status }));
@@ -241,8 +242,11 @@
     const peer = snapshot.commander || {};
     text("topo-commander", peer.peer_status === "ready" ? "Authenticated MCP peer" : "Peer: " + phrase(peer.peer_status));
     setIndicator("status-commander", peer.ready && peer.authenticated ? "Verified" : "Unverified", peer.ready && peer.authenticated ? "good" : "warn");
-    text("topo-tunnel", snapshot.tunnel?.state === "configured_unverified" ? "Tunnel identifier configured; not proven live" : "No verified connection");
-    setIndicator("status-tunnel", snapshot.tunnel?.connection_verified ? "Verified" : "Unverified", snapshot.tunnel?.connection_verified ? "good" : "warn");
+    const tunnelReady = snapshot.tunnel?.managed_process_running === true &&
+      snapshot.tunnel?.client_ready === true && snapshot.tunnel?.health === "ready";
+    text("topo-tunnel", snapshot.tunnel?.connection_verified ? "Recent authenticated MCP consumer proof" :
+      tunnelReady ? "SCC tunnel client ready; consumer proof pending" : "Tunnel client not verified ready");
+    setIndicator("status-tunnel", tunnelReady ? "Client ready" : "Unverified", tunnelReady ? "good" : "warn");
     details("workspace-details", [
       ["Project", snapshot.project?.name || "None activated"],
       ["Languages", snapshot.project?.languages?.join(", ") || "Not reported"],
@@ -265,11 +269,11 @@
       ["Local readiness signal", phrase(tunnel.health)],
       ["ChatGPT round-trip", tunnel.connection_verified ? "Verified" : "Not verified"],
     ]);
-    text("tunnel-chip", tunnel.connection_verified ? "CONNECTED" : "UNVERIFIED");
+    text("tunnel-chip", tunnel.connection_verified ? "RECENT MCP CALL" : tunnelReady ? "CLIENT READY" : "UNVERIFIED");
     details("connection-details", [
       ["Tunnel ID", tunnel.id || "Not configured in runtime"],
-      ["Configured", tunnel.state === "configured_unverified" ? "Yes, not verified live" : "No"],
-      ["ChatGPT tool call", tunnel.connection_verified ? "Observed" : "Unverified"],
+      ["Transport ready", tunnelReady ? "Yes; local /readyz returned 200" : "Not verified"],
+      ["MCP consumer proof", tunnel.connection_verified ? "Recent operator challenge accepted" : "Not attested"],
     ]);
     renderTools();
     renderSkills(snapshot);
@@ -680,6 +684,25 @@
     text("commander-check-result",c.ready === true && c.authenticated === true?
       "Authenticated Commander peer verified ready.":
       "NOT VERIFIED: "+phrase(c.peer_status,"not_configured")+". Configure CODEMIND_COMMANDER_HEALTH_URL and CODEMIND_COMMANDER_HEALTH_TOKEN in SCC, and implement the compatible independent peer. No restart was attempted.");
+  });
+  byId("tunnel-consumer-challenge").addEventListener("click", async () => {
+    if (!state.token || state.busy) return notify("Unlock SCC first.");
+    const currentToken=state.token, currentEpoch=state.epoch;
+    text("tunnel-consumer-result","Issuing a one-time MCP acceptance challenge…");
+    try {
+      const response=await fetch("/codemind/api/tunnel/acceptance/challenge",{
+        method:"POST",credentials:"same-origin",cache:"no-store",
+        headers:{"Authorization":"Bearer "+currentToken,"Content-Type":"application/json"},
+        body:"{}",
+      });
+      const body=await response.json();
+      if(state.token!==currentToken||state.epoch!==currentEpoch)return;
+      if(!response.ok||!/^[a-f0-9]{40}$/.test(body.challenge||""))throw Error(body.error||"Challenge unavailable");
+      text("tunnel-consumer-result","Challenge (90 seconds): "+body.challenge+
+        " — Ask ChatGPT to call codemind_consumer_proof with this exact challenge, then press Refresh. The proof expires after 10 minutes and does not attest cloud caller identity.");
+    }catch{
+      if(state.token===currentToken)text("tunnel-consumer-result","Challenge unavailable: verify the SCC-managed tunnel is ready and retry.");
+    }
   });
   byId("tunnel-evidence").addEventListener("click", () => {
     if (!state.snapshot) return notify("Authenticate and refresh before exporting.");

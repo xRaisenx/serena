@@ -169,6 +169,15 @@ def register_codemind_routes(app: Any, agent: Any, tool_names: list[str], tool_u
             return jsonify({"ok": False, "error": str(exc)}), 409
         return jsonify({"ok": True, "key_configured": False})
 
+    @bp.post("/tunnel/acceptance/challenge")
+    def tunnel_acceptance_challenge() -> Any:
+        require_same_origin()
+        try:
+            challenge = tunnel_controller.issue_consumer_challenge()
+        except TunnelControlError as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 409
+        return jsonify(challenge)
+
     @bp.post("/tunnel/doctor")
     def tunnel_doctor() -> Any:
         require_same_origin()
@@ -236,8 +245,15 @@ def register_codemind_routes(app: Any, agent: Any, tool_names: list[str], tool_u
             "usage": {"state": "available" if tool_usage_stats else "not_configured", "stats": stats},
             "tunnel": {
                 "id": os.getenv("CODEMIND_TUNNEL_ID") or tunnel_status["id"],
-                "state": "client_ready_unverified" if tunnel_status["client_ready"] else "configured_unverified",
-                "connection_verified": False,
+                "state": (
+                    "consumer_mcp_call_observed"
+                    if tunnel_status.get("connection_verified") is True
+                    else "client_ready_unverified"
+                    if tunnel_status["client_ready"]
+                    else "configured_unverified"
+                ),
+                "connection_verified": tunnel_status.get("connection_verified") is True,
+                "consumer_proof_origin_attested": tunnel_status.get("consumer_proof_origin_attested") is True,
                 "key_configured": tunnel_status["key_configured"],
                 "managed_process_running": tunnel_status["managed_process_running"],
                 "client_ready": tunnel_status["client_ready"],
@@ -247,7 +263,7 @@ def register_codemind_routes(app: Any, agent: Any, tool_names: list[str], tool_u
             "integrations": {
                 "nmbv_bot": "not_verified",
                 "supervisor": "not_verified",
-                "client_connection": "not_verified",
+                "client_connection": ("recent_mcp_tool_call" if tunnel_status.get("connection_verified") is True else "not_verified"),
             },
             "security": {"operator_authenticated": True, "write_actions_enabled": False, "tunnel_settings_enabled": True},
         }

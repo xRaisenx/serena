@@ -83,6 +83,15 @@ test('exports are bounded observation packets, not fake readiness or secret-bear
   assert.match(js, /No restart was attempted/);
 });
 
+test('tunnel client readiness stays distinct from a recent MCP consumer proof', () => {
+  assert.ok(html.includes('id="tunnel-consumer-challenge"'));
+  assert.ok(html.includes('id="tunnel-consumer-result"'));
+  assert.match(js, /managed_process_running === true && tunnel\.client_ready === true/);
+  assert.match(js, /MCP CALL SEEN/);
+  assert.match(js, /origin is not cryptographically attested/);
+  assert.match(js, /\/codemind\/api\/tunnel\/acceptance\/challenge/);
+});
+
 test('responsive about and operator widgets have small-screen layout', () => {
   assert.match(css, /\.scc-action-row/);
   assert.match(css, /\.about-steps/);
