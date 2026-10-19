@@ -1,0 +1,36 @@
+/* CODEMIND reference extension: inherits main dashboard tokens, no separate design system. */
+.guide-page{min-width:0;background:var(--bg);color:var(--text)}
+.guide-shell{width:min(1120px,100%);margin:auto;padding:0 clamp(16px,3.8vw,40px) 52px;min-width:0}
+.guide-header{display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid var(--line);padding:20px 0}
+.guide-brand{display:flex;align-items:center;gap:12px;min-width:0}.guide-brand img{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:3px}
+.guide-brand span{display:grid;min-width:0}.guide-brand strong{font-size:.9rem;letter-spacing:.08em}.guide-brand small{font-size:.72rem;color:var(--muted)}
+.guide-return{font-size:.83rem;color:var(--accent);font-weight:700;text-align:right}
+.guide-nav{display:flex;flex-wrap:wrap;gap:8px;border-bottom:1px solid var(--line);padding:13px 0}
+.guide-nav a{display:inline-flex;align-items:center;min-height:40px;border:1px solid var(--line);border-radius:9px;padding:8px 13px;color:var(--muted);font-size:.81rem;font-weight:700}
+.guide-nav a:hover,.guide-nav a:focus-visible{background:var(--panel2);color:var(--text)}
+.guide-hero{padding:clamp(35px,7vw,76px) 0 35px}.guide-hero h1{font-size:clamp(2rem,4.8vw,3.6rem);max-width:780px;letter-spacing:-.045em;line-height:1.12;margin:12px 0 17px}
+.guide-eyebrow{color:var(--accent);font-size:.73rem;letter-spacing:.14em;font-weight:800}.guide-hero>p:not(.guide-eyebrow){max-width:790px;color:var(--muted);line-height:1.75}
+.guide-hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:25px}.guide-hero-actions .button{min-height:42px;display:inline-flex;align-items:center}
+.guide-disclaimer{font-size:.82rem;line-height:1.65;padding:13px 15px;border-left:3px solid var(--amber);background:var(--panel2);border-radius:0 9px 9px 0;margin-top:22px}
+.guide-section{margin:27px 0 44px;scroll-margin-top:20px}.guide-heading{display:flex;align-items:start;gap:15px;margin-bottom:19px}.guide-heading h2{font-size:clamp(1.2rem,2.5vw,1.65rem);margin:0 0 5px}.guide-heading p{font-size:.85rem;color:var(--muted);margin:0;line-height:1.6}
+.guide-step{display:grid;place-items:center;flex:0 0 39px;height:39px;border-radius:11px;background:var(--accent-strong);border:1px solid var(--line);color:var(--accent);font-size:.87rem;font-weight:800}
+.guide-timeline{padding:0;display:grid;gap:12px;counter-reset:step;list-style:none}.guide-timeline>li{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 17px 15px 20px;counter-increment:step}
+.guide-timeline>li>strong:before{content:counter(step,decimal-leading-zero) '  /  ';color:var(--accent)}.guide-timeline>li>strong{display:block;font-size:.95rem}
+.guide-timeline p,.guide-answer p,.guide-gate p,.guide-about-grid p{font-size:.84rem;line-height:1.7;color:var(--muted);margin:7px 0}
+.guide-route,.guide-rule{background:var(--panel2);border:1px solid var(--line);padding:15px 17px;border-radius:11px;font-size:.87rem;line-height:1.7}
+.guide-gates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.guide-gate{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:17px;min-width:0}
+.guide-gate-head{display:flex;justify-content:space-between;align-items:start;gap:12px;flex-wrap:wrap}.guide-gate h3{font-size:.91rem;margin:0}
+.guide-pill{border:1px solid var(--line);border-radius:99px;padding:4px 8px;font-size:.67rem;color:var(--amber);font-weight:800;white-space:nowrap}
+.guide-gate small{display:block;line-height:1.65;color:var(--quiet);font-size:.73rem}
+.guide-rule{margin-top:15px}.guide-search{display:grid;grid-template-columns:minmax(180px,250px) minmax(0,1fr);gap:10px 14px;align-items:center;margin:15px 0 21px}
+.guide-search label{font-size:.86rem;font-weight:750}.guide-search input{width:100%;min-width:0;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:12px 13px}
+.guide-search p{grid-column:2;color:var(--muted);font-size:.76rem;margin:0}
+.guide-items{display:grid;gap:11px}.guide-items details{background:var(--panel);border:1px solid var(--line);border-radius:11px;min-width:0;overflow:hidden}
+.guide-items summary{cursor:pointer;padding:15px 18px;font-size:.9rem;font-weight:700;line-height:1.55}
+.guide-items summary:hover{background:var(--panel2)}.guide-items details[open] summary{border-bottom:1px solid var(--line)}.guide-answer{padding:10px 18px 15px}
+.guide-about-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.guide-about-grid>div{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:17px;min-width:0}.guide-about-grid h3{margin:0 0 6px;font-size:.96rem}
+.guide-footer{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;border-top:1px solid var(--line);padding:19px 0;color:var(--muted);font-size:.76rem}
+.guide-footer a{color:var(--accent)}.guide-page code{overflow-wrap:anywhere;font-size:.93em}
+.guide-page :focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+@media (max-width:700px){.guide-gates,.guide-about-grid{grid-template-columns:1fr}.guide-search{grid-template-columns:1fr}.guide-search p{grid-column:1}.guide-header{align-items:start}.guide-nav a{flex:1 1 auto;justify-content:center}}
+@media (prefers-reduced-motion: reduce){.guide-page,.guide-page *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
