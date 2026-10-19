@@ -1,5 +1,10 @@
 # CODEMIND Serena Architecture and Acceptance Slices
 
+## Operator How-To, About, scenario FAQs and readiness
+
+The [CODEMIND SCC Operator How-To & FAQs](CODEMIND-OPERATOR-HOWTO-FAQ.md) defines the P1–P10 workflow and five Codex readiness gates (hooks, Serena index, filetype routing, maximum-three host scheduler, and proof/safety). The [route comparison](CODEMIND-ROUTE-SIMULATION.md) describes a bounded sandbox simulation; it does not attest deployed subagents. The SCC About page links to the responsive operator guide at `/dashboard/codemind/guide.html`. Selection, loaded instructions, tool execution, source revision and runtime readiness remain separate states.
+
+
 ## Foundation and provenance
 - Upstream: oraios/serena, pinned commit d9e4c796fae0207ba6848d1df4b331122a5567b5.
 - Fork: xRaisenx/serena. Serena application is GPL-3.0-or-later; SolidLSP remains MIT.
