@@ -1,0 +1,7 @@
+{
+  "id": "codemind-worker-method",
+  "version": "1.0.0",
+  "description": "CODEMIND method: owned bounded worker task packets.",
+  "instructions": "Create bounded work packets with exact project, source, resource ownership, deadline, forbidden operations and required proof. Only actual authenticated executor handles establish worker liveness.\nAll methods are advisory unless an independently authorized owner invokes available tools. selected != loaded != executed; no secrets in evidence, no unfounded PASS.",
+  "enabled": true
+}

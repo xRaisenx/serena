@@ -1,0 +1,283 @@
+{
+  "schema": 1,
+  "title": "CODEMIND source-indexed engineering method catalog",
+  "source_provenance": "NMBV PR #636 source taxonomy; CODEMIND descriptions independently authored. No skill instruction bodies have been copied.",
+  "installation_state": "REFERENCE_ONLY",
+  "methods": [
+    {
+      "id": "codemind-executive-discipline",
+      "source_name": "ai-psychiatry",
+      "description": "bounded evidence and executive-control discipline",
+      "source_path": ".agents/skills/ai-psychiatry/SKILL.md",
+      "source_repository": "xRaisenx/nmbv-management-system-v3",
+      "state": "REFERENCE_ONLY",
+      "loaded": false,
+      "executed": false,
+      "authorization_granted": false
+    },
+    {
+      "id": "codemind-single-control",
+      "source_name": "all-the-medicine",
+      "description": "one-control-at-a-time problem solving",
+      "source_path": ".agents/skills/ai-psychiatry/upstream/all-the-medicine.SKILL.md",
+      "source_repository": "xRaisenx/nmbv-management-system-v3",
+      "state": "REFERENCE_ONLY",
+      "loaded": false,
+      "executed": false,
+      "authorization_granted": false
+    },
+    {
+      "id": "codemind-architecture-review",
+      "source_name": "architecture-compass",
+      "description": "architecture drift and ADR review",
+      "source_path": ".agents/skills/stark-ai-developer/upstream/architecture-compass.SKILL.md",
+      "source_repository": "xRaisenx/nmbv-management-system-v3",
+      "state": "REFERENCE_ONLY",
+      "loaded": false,
+      "executed": false,
+      "authorization_granted": false
+    },
+    {
+      "id": "codemind-autonomous-workflow",
+      "source_name": "autonomous-engineering",
+      "description": "checkpointed long-running engineering discipline",
+      "source_path": ".agents/skills/autonomous-engineering/SKILL.md",
+      "source_repository": "xRaisenx/nmbv-management-system-v3",
+      "state": "REFERENCE_ONLY",
+      "loaded": false,
+      "executed": false,
+      "authorization_granted": false
+    },
+    {
+      "id": "codemind-bug-triage",
+      "source_name": "bug-triage",
+      "description": "first observed failure localization and reproducible triage",
+      "source_path": ".agents/skills/bug-triage/SKILL.md",
+      "source_repository": "xRaisenx/nmbv-management-system-v3",
+      "state": "REFERENCE_ONLY",
+      "loaded": false,
+      "executed": false,
+      "authorization_granted": false
+    },
+    {
+      "id": "codemind-spec-interviewer",
+      "source_name": "codex-spec-interviewer",
+      "description": "specification and requirement disambiguation",
+      "source_path": ".agents/skills/stark-ai-developer/upstream/codex-spec-interviewer.SKILL.md",
+      "source_repository": "xRaisenx/nmbv-management-system-v3",
+      "state": "REFERENCE_ONLY",
+      "loaded": false,
+      "executed": false,
+      "authorization_granted": false
+    },
+    {
+      "id": "codemind-deterministic-debugging",
+      "source_name": "deterministic-debugging",
+      "description": "recurrent failure and contradiction diagnosis",
+      "source_path": ".agents/skills/deterministic-debugging/SKILL.md",
+      "source_repository": "xRaisenx/nmbv-management-system-v3",
+      "state": "REFERENCE_ONLY",
+      "loaded": false,
+      "executed": false,
+      "authorization_granted": false
+    },
+    {
+      "id": "codemind-future-unraveler",
+      "source_name": "future-unraveler",
+      "description": "conditional safety-aware lookahead",
+      "source_path": "NMBV-Worker/skills/future-unraveler/SKILL.md",
+      "source_repository": "xRaisenx/nmbv-management-system-v3",
+      "state": "REFERENCE_ONLY",
+      "loaded": false,
+      "executed": false,
+      "authorization_granted": false
+    },
+    {
+      "id": "codemind-guarded-git-delivery",
+      "source_name": "guarded-git-delivery",
+      "description": "protected Git delivery and source revision checking",
+      "source_path": "NMBV-Worker/skills/guarded-git-delivery/SKILL.md",
+      "source_repository": "xRaisenx/nmbv-management-system-v3",
+      "state": "REFERENCE_ONLY",
+      "loaded": false,
+      "executed": false,
+      "authorization_granted": false
+    },
+    {
+      "id": "codemind-job-completion",
+      "source_name": "job-completion",
+      "description": "evidence-based task completion criteria",
+      "source_path": ".agents/skills/job-completion/SKILL.md",
+      "source_repository": "xRaisenx/nmbv-management-system-v3",
+      "state": "REFERENCE_ONLY",
+      "loaded": false,
+      "executed": false,
+      "authorization_granted": false
+    },
+    {
+      "id": "codemind-neurosymbolic-implementation",
+      "source_name": "neurosymbolic-implementation",
+      "description": "Serena symbol-first constrained coding",
+      "source_path": "NMBV-Worker/skills/neurosymbolic-implementation/SKILL.md",
+      "source_repository": "xRaisenx/nmbv-management-system-v3",
+      "state": "REFERENCE_ONLY",
+      "loaded": false,
+      "executed": false,
+      "authorization_granted": false
+    },
+    {
+      "id": "codemind-neurosymbolic-validation",
+      "source_name": "neurosymbolic-validation",
+      "description": "symbolic invariants and contradiction proof",
+      "source_path": ".agents/skills/neurosymbolic-validation/SKILL.md",
+      "source_repository": "xRaisenx/nmbv-management-system-v3",
+      "state": "REFERENCE_ONLY",
+      "loaded": false,
+      "executed": false,
+      "authorization_granted": false
+    },
+    {
+      "id": "codemind-engineering-coordination",
+      "source_name": "nmbv-engineering-agency",
+      "description": "disjoint cross-boundary engineering coordination",
+      "source_path": ".agents/skills/nmbv-engineering-agency/SKILL.md",
+      "source_repository": "xRaisenx/nmbv-management-system-v3",
+      "state": "REFERENCE_ONLY",
+      "loaded": false,
+      "executed": false,
+      "authorization_granted": false
+    },
+    {
+      "id": "codemind-fullstack-specialist",
+      "source_name": "nmbv-fullstack-specialist",
+      "description": "general frontend/backend/DB technical specialization",
+      "source_path": ".agents/skills/nmbv-fullstack-specialist/SKILL.md",
+      "source_repository": "xRaisenx/nmbv-management-system-v3",
+      "state": "REFERENCE_ONLY",
+      "loaded": false,
+      "executed": false,
+      "authorization_granted": false
+    },
+    {
+      "id": "codemind-worker-method",
+      "source_name": "nmbv-worker",
+      "description": "owned bounded worker task packets",
+      "source_path": ".agents/skills/nmbv-worker/SKILL.md",
+      "source_repository": "xRaisenx/nmbv-management-system-v3",
+      "state": "REFERENCE_ONLY",
+      "loaded": false,
+      "executed": false,
+      "authorization_granted": false
+    },
+    {
+      "id": "codemind-no-regression-closure",
+      "source_name": "no-regression-closure",
+      "description": "independent regression closure",
+      "source_path": "NMBV-Worker/skills/no-regression-closure/SKILL.md",
+      "source_repository": "xRaisenx/nmbv-management-system-v3",
+      "state": "REFERENCE_ONLY",
+      "loaded": false,
+      "executed": false,
+      "authorization_granted": false
+    },
+    {
+      "id": "codemind-durability-validation",
+      "source_name": "real-world-durability",
+      "description": "failure scenario and resource durability checks",
+      "source_path": "NMBV-Worker/skills/real-world-durability/SKILL.md",
+      "source_repository": "xRaisenx/nmbv-management-system-v3",
+      "state": "REFERENCE_ONLY",
+      "loaded": false,
+      "executed": false,
+      "authorization_granted": false
+    },
+    {
+      "id": "codemind-release-validation",
+      "source_name": "release-validation",
+      "description": "release provenance and client acceptance",
+      "source_path": ".agents/skills/release-validation/SKILL.md",
+      "source_repository": "xRaisenx/nmbv-management-system-v3",
+      "state": "REFERENCE_ONLY",
+      "loaded": false,
+      "executed": false,
+      "authorization_granted": false
+    },
+    {
+      "id": "codemind-repository-audit",
+      "source_name": "repository-audit",
+      "description": "read-only source inventory and ownership mapping",
+      "source_path": ".agents/skills/repository-audit/SKILL.md",
+      "source_repository": "xRaisenx/nmbv-management-system-v3",
+      "state": "REFERENCE_ONLY",
+      "loaded": false,
+      "executed": false,
+      "authorization_granted": false
+    },
+    {
+      "id": "codemind-stark-methods",
+      "source_name": "stark-ai-developer",
+      "description": "architecture/spec adapter",
+      "source_path": ".agents/skills/stark-ai-developer/SKILL.md",
+      "source_repository": "xRaisenx/nmbv-management-system-v3",
+      "state": "REFERENCE_ONLY",
+      "loaded": false,
+      "executed": false,
+      "authorization_granted": false
+    },
+    {
+      "id": "codemind-superpowers-methods",
+      "source_name": "superpowers",
+      "description": "generic TDD and debugging methods wrapper",
+      "source_path": ".agents/skills/superpowers/SKILL.md",
+      "source_repository": "xRaisenx/nmbv-management-system-v3",
+      "state": "REFERENCE_ONLY",
+      "loaded": false,
+      "executed": false,
+      "authorization_granted": false
+    },
+    {
+      "id": "codemind-systematic-debugging",
+      "source_name": "systematic-debugging",
+      "description": "minimal causal root-cause falsification",
+      "source_path": ".agents/skills/superpowers/upstream/systematic-debugging.SKILL.md",
+      "source_repository": "xRaisenx/nmbv-management-system-v3",
+      "state": "REFERENCE_ONLY",
+      "loaded": false,
+      "executed": false,
+      "authorization_granted": false
+    },
+    {
+      "id": "codemind-targeted-fix",
+      "source_name": "targeted-fix",
+      "description": "small authorized changes",
+      "source_path": ".agents/skills/targeted-fix/SKILL.md",
+      "source_repository": "xRaisenx/nmbv-management-system-v3",
+      "state": "REFERENCE_ONLY",
+      "loaded": false,
+      "executed": false,
+      "authorization_granted": false
+    },
+    {
+      "id": "codemind-test-driven-development",
+      "source_name": "test-driven-development",
+      "description": "red-green test discipline",
+      "source_path": ".agents/skills/superpowers/upstream/test-driven-development.SKILL.md",
+      "source_repository": "xRaisenx/nmbv-management-system-v3",
+      "state": "REFERENCE_ONLY",
+      "loaded": false,
+      "executed": false,
+      "authorization_granted": false
+    },
+    {
+      "id": "codemind-verification-before-completion",
+      "source_name": "verification-before-completion",
+      "description": "fresh verification before completion",
+      "source_path": ".agents/skills/superpowers/upstream/verification-before-completion.SKILL.md",
+      "source_repository": "xRaisenx/nmbv-management-system-v3",
+      "state": "REFERENCE_ONLY",
+      "loaded": false,
+      "executed": false,
+      "authorization_granted": false
+    }
+  ]
+}

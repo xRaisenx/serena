@@ -1,0 +1,7 @@
+{
+  "id": "deterministic-debugging",
+  "version": "0.1.0",
+  "description": "Use evidence to isolate a reproducible root cause and require a changed strategy after repeated equivalent failure.",
+  "instructions": "Pin current source and error; reproduce; inspect owning symbols and references; test disconfirming hypotheses; record actual test result. Never reattempt an equivalent failed operation when the MCP guard reports STRATEGY_CHANGE_REQUIRED. Do not treat timeout or skipped tests as success.",
+  "enabled": true
+}

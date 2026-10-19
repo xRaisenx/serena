@@ -1,0 +1,7 @@
+{
+  "id": "codemind-verification-before-completion",
+  "version": "1.0.0",
+  "description": "CODEMIND method: fresh verification before completion.",
+  "instructions": "Collect fresh direct test results and counts, source SHA, runtime/build identity, permission and consumer evidence. Classify skipped, timed out, blocked or unproven stages honestly.\nAll methods are advisory unless an independently authorized owner invokes available tools. selected != loaded != executed; no secrets in evidence, no unfounded PASS.",
+  "enabled": true
+}

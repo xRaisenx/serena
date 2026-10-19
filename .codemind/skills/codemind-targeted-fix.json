@@ -1,0 +1,7 @@
+{
+  "id": "codemind-targeted-fix",
+  "version": "1.0.0",
+  "description": "CODEMIND method: small authorized changes.",
+  "instructions": "After a bounded owner and red reproducer are established, perform the smallest CAS/JIT source change. Preserve foreign edits, run direct and affected tests, and inspect the owned diff.\nAll methods are advisory unless an independently authorized owner invokes available tools. selected != loaded != executed; no secrets in evidence, no unfounded PASS.",
+  "enabled": true
+}

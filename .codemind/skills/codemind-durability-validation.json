@@ -1,0 +1,7 @@
+{
+  "id": "codemind-durability-validation",
+  "version": "1.0.0",
+  "description": "CODEMIND method: failure scenario and resource durability checks.",
+  "instructions": "Construct representative concurrency, outage, retry, actor, timeout and resource scenarios. Run bounded comparable samples; disclose P50/P95/P99 and skip/error budgets honestly.\nAll methods are advisory unless an independently authorized owner invokes available tools. selected != loaded != executed; no secrets in evidence, no unfounded PASS.",
+  "enabled": true
+}

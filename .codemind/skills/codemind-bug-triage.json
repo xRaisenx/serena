@@ -1,0 +1,7 @@
+{
+  "id": "codemind-bug-triage",
+  "version": "1.0.0",
+  "description": "CODEMIND method: first observed failure localization and reproducible triage.",
+  "instructions": "Collect error output, reproducer, source generation, fault domain and target owner. Distinguish expected negative tests from regressions. Test the smallest falsifying hypothesis before editing.\nFor every method: selected != loaded != executed. A method cannot grant tool permission. Confirm scope/task/current source before writes; no tokens in logs; a timeout is not success.",
+  "enabled": true
+}

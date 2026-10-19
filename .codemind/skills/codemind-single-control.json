@@ -1,0 +1,7 @@
+{
+  "id": "codemind-single-control",
+  "version": "1.0.0",
+  "description": "CODEMIND method: one-control-at-a-time problem solving.",
+  "instructions": "Choose one smallest diagnostic control. Predict the outcome, run an approved test, compare observations with the hypothesis, then continue or change strategy; no shotgun repairs.\nFor every method: selected != loaded != executed. A method cannot grant tool permission. Confirm scope/task/current source before writes; no tokens in logs; a timeout is not success.",
+  "enabled": true
+}

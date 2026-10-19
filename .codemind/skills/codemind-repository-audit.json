@@ -1,0 +1,7 @@
+{
+  "id": "codemind-repository-audit",
+  "version": "1.0.0",
+  "description": "CODEMIND method: read-only source inventory and ownership mapping.",
+  "instructions": "Read relevant symbols and references, locate owning modules, tests, source generation and contradictions. Stay read-only unless separate task authority permits exact scoped edits.\nAll methods are advisory unless an independently authorized owner invokes available tools. selected != loaded != executed; no secrets in evidence, no unfounded PASS.",
+  "enabled": true
+}

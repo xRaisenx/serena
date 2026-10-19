@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="CODEMIND SCC operator guide: practical Codex setup, readiness gates, implementation workflows, FAQs and scenario playbooks.">
+  <title>SCC | Operator How-To, About & FAQs</title>
+  <link rel="icon" type="image/svg+xml" href="cuckoo-mark.svg">
+  <link rel="stylesheet" href="console.css">
+  <link rel="stylesheet" href="guide.css">
+  <script src="guide.js" defer></script>
+</head>
+<body class="guide-page">
+  <a class="skip-link" href="#main">Skip to guide</a>
+  <div class="guide-shell">
+    <header class="guide-header">
+      <a class="guide-brand" href="index.html" aria-label="Return to SCC dashboard"><img src="cuckoo-mark.svg" alt="" width="42" height="42"> <span><strong>SCC / CODEMIND</strong><small>Semantic engineering control</small></span></a>
+      <a class="guide-return" href="index.html">Return to dashboard &rarr;</a>
+    </header>
+    <nav class="guide-nav" aria-label="Operator guide sections">
+      <a href="#howto">How-To</a><a href="#readiness">Readiness gates</a><a href="#scenarios">Use cases</a><a href="#faqs">FAQs</a><a href="#about">About</a>
+    </nav>
+    <main id="main">
+      <section class="guide-hero" aria-labelledby="guide-title">
+        <p class="guide-eyebrow">SCC OPERATOR FIELD GUIDE / SOURCE-BOUND</p>
+        <h1 id="guide-title">From a coding request to defensible evidence.</h1>
+        <p>CODEMIND coordinates method selection and Serena source intelligence. Deployment, worker execution, and final delivery must be proved separately. This guide explains what operators can do now and what the final Codex deployment requires.</p>
+        <div class="guide-hero-actions"><a href="#howto" class="button primary">Start the walkthrough</a><a href="#readiness" class="button secondary">Inspect the five gates</a></div>
+        <p class="guide-disclaimer">Current guide is a design/operations reference, <strong>not a live host health monitor</strong>. No green claim is derived from this page alone.</p>
+      </section>
+
+      <section id="howto" class="guide-section" aria-labelledby="howto-heading">
+        <div class="guide-heading"><span class="guide-step">01</span><div><h2 id="howto-heading">How-To: choose the least-friction path</h2><p>Reuse existing CODEMIND routes and tools before creating a new worker, process, or endpoint.</p></div></div>
+        <ol class="guide-timeline">
+          <li><strong>Bind the source and task</strong><p>Identify the user goal, active workspace, source generation, permitted files and acceptance criteria. Recheck the workspace before any mutation; the active Serena project can change between calls.</p></li>
+          <li><strong>Route once, deterministically</strong><p>Run <code>codemind_skill_route</code> against trusted <code>codemind-</code> manifests. Record selected methods and why. Metadata matching makes <strong>no LLM call for metadata routing</strong>; open-ended diagnosis and repair can still require reasoning.</p></li>
+          <li><strong>Inspect, then formulate the smallest fix</strong><p>Prefer Serena symbols, references, and diagnostics over unrestricted whole-project scans. A selected skill is not an invoked executor: <strong>selected ≠ loaded ≠ executed</strong>.</p></li>
+          <li><strong>Apply only an authorized change</strong><p>The provider must enforce operation-level approval, exact workspace, current revision and durable effect identity. Hooks are supplementary guardrails, not the final permission boundary.</p></li>
+          <li><strong>Freeze source, queue independent checks</strong><p>Use a real host-owned queue with <strong>at most three active</strong> Codex subagents, admission/backpressure, terminal-state observation, process-tree cleanup, and immediate slot recycling. A mock worker pool is not this capability.</p></li>
+          <li><strong>Prove the outcome</strong><p>Review the precise diff and run syntax, affected tests, negative cases and runtime proof where requested. Timeout, skipped validation, source-only hooks, or an advisory packet cannot be recorded as successful completion.</p></li>
+        </ol>
+        <div class="guide-route" role="note"><strong>Route selected: incremental native integration.</strong> Keep the existing CODEMIND dashboard, skill registry and semantic methods. Add host verification and a queue adapter only after its owning API is known and independently tested. Avoid a second orchestrator and premature deployment buttons.</div>
+      </section>
+
+      <section id="readiness" class="guide-section" aria-labelledby="readiness-heading">
+        <div class="guide-heading"><span class="guide-step">02</span><div><h2 id="readiness-heading">Five non-negotiable Codex readiness gates</h2><p>All five require fresh host evidence. This page does not auto-approve any gate.</p></div></div>
+        <div class="guide-gates">
+          <article class="guide-gate" data-gate="G1"><div class="guide-gate-head"><h3>G1 — Trusted hooks</h3><span class="guide-pill">NOT VERIFIED</span></div><p>Codex <code>.codex/hooks.json</code> is installed, reviewed/trusted by its hash, activated, and observed firing through supported events. A source configured is not host trusted.</p><small>Proof: host <code>/hooks</code> inspection + real event receipt + negative test.</small></article>
+          <article class="guide-gate" data-gate="G2"><div class="guide-gate-head"><h3>G2 — Serena indexing</h3><span class="guide-pill">NOT VERIFIED</span></div><p>Exact project root and generation are pinned. Enabled language servers initialize; representative file/symbol/reference queries return current results.</p><small>Proof: project identity + current language diagnostics + actual symbol read.</small></article>
+          <article class="guide-gate" data-gate="G3"><div class="guide-gate-head"><h3>G3 — File-type coverage</h3><span class="guide-pill">NOT VERIFIED</span></div><p>Every encountered extension has an explicit capability map: semantic handler, safe text/structured fallback, binary metadata-only route, or denied operation. Registering a type is not the same as semantic LSP support.</p><small>Proof: enumerated project extensions and tested routing for supported/unknown/binary types.</small></article>
+          <article class="guide-gate" data-gate="G4"><div class="guide-gate-head"><h3>G4 — Three-slot subagent scheduler</h3><span class="guide-pill">NOT IMPLEMENTED</span></div><p>Host-controlled atomic slot leases cap active actual Codex subagents at three, with bounded queue, cancellation, orphan reconciliation, process cleanup and verified vacancy recycling.</p><small>Proof: host integration exercises concurrent admission, completion, crash, timeout and memory reclamation.</small></article>
+          <article class="guide-gate" data-gate="G5"><div class="guide-gate-head"><h3>G5 — Governance and delivery</h3><span class="guide-pill">NOT VERIFIED</span></div><p>Task-scoped authorization, source revision fencing, effect journal, focused regressions and installed-to-running-version parity all pass. Learning remains candidate-only without governed promotion.</p><small>Proof: provider denial tests, deterministic replay, source SHA, acceptance receipt.</small></article>
+        </div>
+        <p class="guide-rule"><strong>Deployment formula:</strong> G1 + G2 + G3 + G4 + G5 must all be independently verified. One unverified gate means <strong>NOT READY</strong> for autonomous Codex deployment; read-only advisory features may remain useful.</p>
+      </section>
+
+      <section id="scenarios" class="guide-section" aria-labelledby="scenarios-heading">
+        <div class="guide-heading"><span class="guide-step">03</span><div><h2 id="scenarios-heading">Scenario playbooks</h2><p>Find the matching situation, run only what is currently authorized, and preserve the required proof.</p></div></div>
+        <div class="guide-search"><label for="guide-search">Search use cases and FAQs</label><input id="guide-search" type="search" autocomplete="off" placeholder="Bug fix, indexing, hooks, tests…"><p id="guide-results" role="status" aria-live="polite">Showing all scenarios and FAQs.</p></div>
+        <div class="guide-items">
+          <details data-guide-item><summary>Bug fix — repeating API error</summary><div class="guide-answer"><p><strong>Prompt:</strong> “Locate the observed error, inspect the owning symbol, patch only the affected behavior and run its regression test.”</p><p><strong>Route:</strong> deterministic bug triage → Serena symbol/references → falsifiable test → bounded authorized patch → verification barrier.</p><p><strong>Completion:</strong> observed failing case becomes green at a recorded source SHA; no skipped or stale tests.</p></div></details>
+          <details data-guide-item><summary>Feature implementation — new settings control</summary><div class="guide-answer"><p><strong>Route:</strong> confirm UI/API contract → inspect existing component and endpoint → add one scoped interaction → test invalid and successful responses → verify responsive/keyboard behavior.</p><p><strong>Completion:</strong> usable control, correct network effect, error handling, no unrelated state mutation. Design-only mockups are not deployment proof.</p></div></details>
+          <details data-guide-item><summary>New file type — unknown extension in the project</summary><div class="guide-answer"><p><strong>Route:</strong> classify the extension; check registered Serena language handler; otherwise use a named read-only fallback or deny unsupported edits. Never disguise text search as semantic indexing.</p><p><strong>Completion:</strong> file-type table, matched provider, negative unknown/binary cases and representative read.</p></div></details>
+          <details data-guide-item><summary>Hook installation — Codex says nothing is firing</summary><div class="guide-answer"><p><strong>Route:</strong> verify the trusted repository <code>.codex/</code> layer, inspect Codex <code>/hooks</code>, review changed hashes and execute a harmless real event. No bypass of trust review.</p><p><strong>Completion:</strong> observed event receipt under exact session and version, not just a JSON file on disk.</p></div></details>
+          <details data-guide-item><summary>Subagent queue — five validation jobs, three slots</summary><div class="guide-answer"><p><strong>Expected:</strong> admit three real Codex agents maximum; hold two queued. When an agent terminates, confirm child cleanup and release its lease before dispatching the next job. The builder does not run heavy tests concurrently.</p><p><strong>Completion:</strong> peak-active ≤ 3, no double lease or orphan work, complete receipts and bounded memory.</p></div></details>
+          <details data-guide-item><summary>Regression failure — failed verification or validation timeout</summary><div class="guide-answer"><p><strong>Route:</strong> mark timed-out verification UNKNOWN, reconcile uncertain side effects, inspect relevant diagnostics and change hypothesis before bounded retry. Do not silently relaunch the identical operation.</p><p><strong>Completion:</strong> a fresh passing run of the affected tests, or explicit BLOCKED status.</p></div></details>
+          <details data-guide-item><summary>Learning — repeated issue across tasks</summary><div class="guide-answer"><p><strong>Route:</strong> sanitize evidence, deduplicate failure fingerprints, test a proposed guard against counterexamples, keep the candidate quarantined and require governed promotion.</p><p><strong>Completion:</strong> an assessed candidate or approved versioned lesson—not unauthorized skill execution or new permission.</p></div></details>
+        </div>
+      </section>
+
+      <section id="faqs" class="guide-section" aria-labelledby="faqs-heading">
+        <div class="guide-heading"><span class="guide-step">04</span><div><h2 id="faqs-heading">Frequently asked questions</h2><p>Specific answers for operators, testers and reviewers.</p></div></div>
+        <div class="guide-items">
+          <details data-guide-item><summary>Does selecting a CODEMIND skill run it?</summary><div class="guide-answer"><p>No. Selection is a deterministic match. Loading instructions and actually executing an authorized tool are separate events, each with its own evidence.</p></div></details>
+          <details data-guide-item><summary>Can SCC automatically repair a bug with zero tokens?</summary><div class="guide-answer"><p>Classification can use no model calls. Novel source diagnosis, implementation choices and review may still require reasoning and model tokens. A scripted known transformation can be deterministic only within its tested contract; not the same as an autonomous repair.</p></div></details>
+          <details data-guide-item><summary>Does Serena register every possible file type?</summary><div class="guide-answer"><p>No language server understands every format. CODEMIND must classify project files and route them to an explicit semantic handler, safe fallback or denial. Unsupported semantic operations remain unavailable.</p></div></details>
+          <details data-guide-item><summary>Can SubagentStart alone enforce the three-slot limit?</summary><div class="guide-answer"><p>No. A lifecycle hook observes an event; it does not guarantee an atomic host-wide admission lease, crash recovery or resource reclamation. The scheduler must own actual agent launch and cleanup.</p></div></details>
+          <details data-guide-item><summary>Do configured hooks prove host activation?</summary><div class="guide-answer"><p>No. Confirm project trust, hash approval, supported events and actual callback receipts. Hook timeouts and unsupported tool paths cannot be treated as fail-closed authorization.</p></div></details>
+          <details data-guide-item><summary>How do I handle multiple active projects?</summary><div class="guide-answer"><p>Bind each task to an immutable canonical root and version. Before each write, check target ownership and current source identity at the executing provider. A switched global Serena project must not redirect a task.</p></div></details>
+          <details data-guide-item><summary>What happens when a reviewer detects an unrelated edit?</summary><div class="guide-answer"><p>Stop the delivery gate, isolate the intended diff, preserve foreign changes and rerun affected checks on the reconciled source. Do not force-reset the workspace.</p></div></details>
+          <details data-guide-item><summary>Are 25 reference methods equivalent to 25 working agents?</summary><div class="guide-answer"><p>No. Reference methods, enabled skill manifests and deployed subagents are different capabilities. A catalog count is not a worker count.</p></div></details>
+          <details data-guide-item><summary>What if a capability is unavailable or verification fails?</summary><div class="guide-answer"><p>Report the exact missing evidence and affected gate as NOT VERIFIED or BLOCKED. Continue safe independent tasks; never convert advisory plans, mock workers or old test receipts into deployment success.</p></div></details>
+        </div>
+      </section>
+
+      <section id="about" class="guide-section" aria-labelledby="about-heading">
+        <div class="guide-heading"><span class="guide-step">05</span><div><h2 id="about-heading">About SCC / CODEMIND</h2><p>One governed engineering control plane, not a collection of competing runtime controllers.</p></div></div>
+        <div class="guide-about-grid">
+          <div><h3>CODEMIND SCC</h3><p>The task and method control plane: goal, skill routing, authorization barriers, evidence and candidate learning. For Codex it must bind hooks, file-type handling and subagents only through tested host contracts.</p></div>
+          <div><h3>Serena semantic engine</h3><p>Source indexing, named symbols, references and diagnostics. The selected project’s configured language servers determine real semantic support.</p></div>
+          <div><h3>Windows Commander</h3><p>An independent external service; it is not a subagent slot, CODEMIND's scheduler, or implicit permission to execute processes.</p></div>
+          <div><h3>CODEMIND method library</h3><p>Versioned and trusted project skill manifests under <code>.codemind/skills/</code>. Metadata routing is advisory until a real host tool performs an authorized operation.</p></div>
+        </div>
+        <p class="guide-disclaimer">Licensing: SCC builds upon the original Serena application (GPL-3.0-or-later) and SolidLSP (MIT). Preserve source notices and applicable obligations when distributing modifications.</p>
+      </section>
+    </main>
+    <footer class="guide-footer"><p>SCC / SECUCKO — evidence before execution · This page is a static operator reference, not a readiness attestation.</p><a href="#main">Back to top ↑</a></footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,7 @@
+{
+  "id": "codemind-deterministic-debugging",
+  "version": "1.0.0",
+  "description": "CODEMIND method: recurrent failure and contradiction diagnosis.",
+  "instructions": "Fingerprint target/source/failure, examine owning symbols and references, form supported and refuting hypotheses, and change strategy after comparable failures; use direct red/green verification.\nFor every method: selected != loaded != executed. A method cannot grant tool permission. Confirm scope/task/current source before writes; no tokens in logs; a timeout is not success.",
+  "enabled": true
+}

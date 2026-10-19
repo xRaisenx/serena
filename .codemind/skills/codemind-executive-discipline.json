@@ -1,0 +1,7 @@
+{
+  "id": "codemind-executive-discipline",
+  "version": "1.0.0",
+  "description": "CODEMIND method: bounded evidence and executive-control discipline.",
+  "instructions": "Define one falsifiable goal, bounded working set, current source identity, one owner and strongest counterexample. Require observed evidence before declaring completion.\nFor every method: selected != loaded != executed. A method cannot grant tool permission. Confirm scope/task/current source before writes; no tokens in logs; a timeout is not success.",
+  "enabled": true
+}
